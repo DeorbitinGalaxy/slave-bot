@@ -1,0 +1,39 @@
+{
+  "name": "slave-bot",
+  "version": "1.0.0",
+  "description": "Self-hosted extensible discord bot",
+  "main": "index.js",
+  "scripts": {
+    "tsc": "node_modules/.bin/tsc -p .",
+    "tsc:watch": "npm run tsc -- --watch",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node dist/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fknop/slave-bot.git"
+  },
+  "keywords": [
+    "Discord",
+    "bot",
+    "extensible",
+    "slave",
+    "self",
+    "hosted"
+  ],
+  "author": "Florian Knop",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/fknop/slave-bot/issues"
+  },
+  "homepage": "https://github.com/fknop/slave-bot#readme",
+  "devDependencies": {
+    "typescript": "^2.0.0"
+  },
+  "dependencies": {
+    "discord.js": "^8.1.0",
+    "lodash": "^4.15.0",
+    "nedb": "^1.8.0",
+    "rxjs": "^5.0.0-beta.11"
+  }
+}
