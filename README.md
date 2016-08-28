@@ -1,5 +1,9 @@
 # slave-bot
 
-Try in discord:
+Try in discord (work in progress):
 
-https://discordapp.com/oauth2/authorize?client_id=219573573692555265&scope=bot&permissions=3072
+Create a new application and a bot, copy paste your
+
+https://discordapp.com/oauth2/authorize?client_id=YOURCLIENTID&scope=bot&permissions=YOURPERMISSIONS
+
+
