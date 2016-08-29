@@ -11,6 +11,7 @@ import { Message } from 'discord.js';
 
 export interface PluginConfiguration {
   server: SlaveBotServer;
+  minimist: any,
   bot: Client;
   db: Datastore;
   options?: any;
@@ -97,7 +98,8 @@ export class SlaveBotServer {
 
     const slavePluginsPaths: string[] = [
       'commands',
-      'plugin-list'
+      'plugin-list',
+      'code'
     ];
 
     const configPluginPaths = this.config.plugins || [];
@@ -123,7 +125,8 @@ export class SlaveBotServer {
         server: this,
         options: null,
         bot: this.bot,
-        db: new Datastore(`./databases/${key}.db`)
+        db: new Datastore(`./databases/${key}.db`),
+        minimist: require('minimist')
       });
     });
 
@@ -143,7 +146,7 @@ export class SlaveBotServer {
 
     return Observable.create((observer: Observer<any>) => {
       this.registrations.subscribe(
-        (value) => observer.next(value),
+        () => {},
         (err) => observer.error(err),
         () => {
           this.bot.loginWithToken(this.config.botToken, null, null, (err) => {
@@ -151,6 +154,7 @@ export class SlaveBotServer {
               observer.error(err);
             }
             else {
+              observer.next(null);
               observer.complete();
             }
           });
