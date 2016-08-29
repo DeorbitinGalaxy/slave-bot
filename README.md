@@ -56,3 +56,12 @@ The permissions can be found in the Discord documentation. Basic permissions for
 * `npm run tsc:watch`
 * `npm start`
 
+## Create a plugin (npm install does not work yet)
+
+* npm init
+* npm install @slave-bot/plugin --save (used for typescript types)
+    + You can omit this step if you're wriing your plugin is JavaScript
+* Write your plugin
+* npm publish
+
+
