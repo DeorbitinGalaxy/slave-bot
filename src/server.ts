@@ -60,6 +60,10 @@ export class SlaveBotServer {
     }
   }
 
+  /**
+   * Parse arguments with minimist
+   * @param args the arguments
+   */
   parseArgs (args: any[]) {
 
     return require('minimist')(args);

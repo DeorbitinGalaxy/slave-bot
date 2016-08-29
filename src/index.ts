@@ -10,6 +10,3 @@ const server = new SlaveBotServer(config);
 server.start().subscribe(() => {
   console.log('Slave bot started');
 });
-
-
-

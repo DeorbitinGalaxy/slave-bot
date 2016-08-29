@@ -7,7 +7,8 @@
     "tsc": "node_modules/.bin/tsc -p .",
     "tsc:watch": "npm run tsc -- --watch",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "start:watch": "node_modules/.bin/nodemon --watch dist dist/index.js"
   },
   "repository": {
     "type": "git",
@@ -28,6 +29,7 @@
   },
   "homepage": "https://github.com/fknop/slave-bot#readme",
   "devDependencies": {
+    "nodemon": "^1.10.2",
     "typescript": "^2.0.0"
   },
   "dependencies": {

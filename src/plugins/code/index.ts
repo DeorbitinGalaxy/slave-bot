@@ -8,7 +8,6 @@ import { split } from '../../utils/message-utils';
 import * as Md from '../../utils/markdown';
 import { fromDiscordEvent } from '../../utils/discord-event';
 
-
 let subscription: any;
 
 export const plugin: SlaveBotPlugin = {
@@ -37,7 +36,6 @@ export const plugin: SlaveBotPlugin = {
           ));
         });
       }
-
     });
 
     return Observable.empty();
@@ -46,4 +44,3 @@ export const plugin: SlaveBotPlugin = {
     subscription.unsubscribe();
   }
 }
-
