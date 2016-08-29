@@ -53,6 +53,6 @@ The permissions can be found in the Discord documentation. Basic permissions for
 
 * `npm install`
 * `typings install`
-* `npm run tsc`
+* `npm run tsc:watch`
 * `npm start`
 

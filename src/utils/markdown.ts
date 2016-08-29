@@ -34,7 +34,7 @@ export function multilineCode (text: string, language: string = '') {
 
 export function strike (text: string) {
 
-  return '<s>' + text + '</s>';
+  return '~~' + text + '~~';
 }
 
 export function quote (text: string) {
