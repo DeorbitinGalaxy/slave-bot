@@ -15,26 +15,37 @@ The `slave.json` contains:
     initialPlayingGame: PLAYING_GAME, // optional
     // Array of plugins, optional
     plugins: [
-        { name: PLUGIN_NAME, path: PLUGIN_PATH }
+        { name: PLUGIN_NAME, path: PLUGIN_PATH, options: {} } // if path is missing, the plugin is a name from the plugins folder
     ]
 }
 ```
 
 A plugin is a module that export:
 
-* a string called `name` defining the plugin name.
-* a string called `version` defining the plugin version. It's not used at the moment.
-* a object called `plugin` with two methods: `register` and `destroy`.
+* a variable called plugin which has:
+    + a name
+    + a version
+    + a register method
+    + a destroy method
+    + an optional description
+    + a list of dependencies. The dependencies are plugins that need to be loaded before this plugin is loaded.
 
 It follows this interface:
 ```js
 export interface SlaveBotPlugin {
-  register: (bot: Client, db?: Datastore) => Observable<any>;
+  name: string;
+  version: string;
+  description?: string;
+  dependencies?: string[];
+  register: (plugin: PluginConfiguration) => Observable<any>;
   destroy: () => void;
 }
 ```
 
-Every plugin has its own database collection, if you don't need the database, you can leave the parameter empty.
+(dependencies is not implemented yet).
+
+
+The plugin configuration objects takes the plugin database (one database per plugin), the server, the bot client and the plugin options.
 
 
 ## Try it: (work in progress)
@@ -54,5 +65,5 @@ The permissions can be found in the Discord documentation. Basic permissions for
 * `npm install`
 * `typings install`
 * `npm run tsc:watch`
-* `npm start`
+* `npm start:watch`
 
