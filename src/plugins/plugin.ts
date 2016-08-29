@@ -9,4 +9,5 @@ export interface SlaveBotPlugin {
   version: string;
   register: (plugin: PluginConfiguration) => Observable<any>;
   destroy: () => void;
+  dependencies?: string[];
 }

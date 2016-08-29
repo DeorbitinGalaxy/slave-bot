@@ -35,7 +35,12 @@ export class SlaveBotServer {
 
   isElevated (message: Message): boolean {
 
-    return message.author.hasRole(this.config.adminRole || 'Slave Master');
+    const server = message.server;
+    const roles = server.roles;
+    const name = this.config.adminRole || 'Slave Master';
+    const role = roles.get('name', name);
+
+    return role ? message.author.hasRole(role) : false;
   }
 
   method (name: string, ...args: any[]): any {
@@ -69,6 +74,14 @@ export class SlaveBotServer {
 
   }
 
+  pluginList () {
+
+    return Object.keys(this.plugins).map((key: string) => {
+      const plugin = this.plugins[key];
+      return { name: plugin.name, version: plugin.version };
+    });
+  }
+
 
   private _setup () {
 
@@ -83,7 +96,8 @@ export class SlaveBotServer {
     });
 
     const slavePluginsPaths: string[] = [
-      'commands'
+      'commands',
+      'plugin-list'
     ];
 
     const configPluginPaths = this.config.plugins || [];
