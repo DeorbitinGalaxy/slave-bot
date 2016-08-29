@@ -27,13 +27,13 @@ export const plugin: SlaveBotPlugin = {
         }
 
         const code = parts.slice(1, parts.length);
-        const args: any = plugin.minimist(code);
+        const args: any = plugin.server.parseArgs(code);
 
         return plugin.bot.deleteMessage(message, { wait: 0 }, (err) => {
           return plugin.bot.sendMessage(message, Md.build(
             Md.line(`From ${message.author.mention()}`),
             Md.line(),
-            Md.multilineCode(args._, args.l)
+            Md.multilineCode(args._.join(' '), args.l)
           ));
         });
       }

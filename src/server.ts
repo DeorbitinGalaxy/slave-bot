@@ -11,7 +11,6 @@ import { Message } from 'discord.js';
 
 export interface PluginConfiguration {
   server: SlaveBotServer;
-  minimist: any,
   bot: Client;
   db: Datastore;
   options?: any;
@@ -59,6 +58,11 @@ export class SlaveBotServer {
     if (typeof fn === 'function') {
       this.methods[name] = fn;
     }
+  }
+
+  parseArgs (args: any[]) {
+
+    return require('minimist')(args);
   }
 
   /**
@@ -125,8 +129,7 @@ export class SlaveBotServer {
         server: this,
         options: null,
         bot: this.bot,
-        db: new Datastore(`./databases/${key}.db`),
-        minimist: require('minimist')
+        db: new Datastore(`./databases/${key}.db`)
       });
     });
 

@@ -26,7 +26,7 @@ export function build (...args: string[]) {
 export function multilineCode (text: string, language: string = '') {
 
   return build(
-    line('```' + language),
+    line('```' + language || ''),
     text,
     line('```')
   );
