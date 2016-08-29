@@ -33,6 +33,7 @@ function registerCommand (bot: Client, db: Datastore, message: Message, parts: s
 
   db.insert({
     _id: command,
+    server: message.server.id,
     content: content.text
   }, (err: any) => {
     if (err && err.errorType === 'uniqueViolated') {
@@ -58,7 +59,7 @@ function deleteCommand (bot: Client, db: Datastore, message: Message) {
     return bot.reply(message, 'Missing command name');
   }
 
-  db.remove({ _id: command }, (err, num) => {
+  db.remove({ _id: command, server: message.server.id }, (err, num) => {
     if (err || num === 0) {
       return bot.reply(message, `Command ${Md.bold('/' + command)} does not exist`);
     }
@@ -73,7 +74,7 @@ function executeCommand (bot: Client, db: Datastore, message: Message) {
 
   const command: string = parts[0];
 
-  db.findOne({ _id: command.slice(1, command.length) }, (err, doc: any) => {
+  db.findOne({ _id: command.slice(1, command.length), server: message.server.id }, (err, doc: any) => {
     if (!err && doc) {
       bot.sendMessage(message.channel, doc.content);
     }
@@ -82,32 +83,39 @@ function executeCommand (bot: Client, db: Datastore, message: Message) {
 
 function commandList (bot: Client, db: Datastore, message: Message) {
 
-  const list: Array<any> = db.getAllData();
-
-  let reply: string;
-  if (list.length === 0) {
-    reply = `No command registered. Register your first command by using ${Md.bold('/addcommand')}`;
-  }
-  else {
-   reply = '' + list.length + ' commands are available:';
-   list.forEach((command) => {
-     reply += `\n/${Md.bold(command._id)}`;
-   });
-  }
-
-  return bot.reply(message, reply);
+  db.find({ server: message.server.id }, (err, list) => {
+    let reply: string;
+    if (list.length === 0) {
+      reply = `No command registered. Register your first command by using ${Md.bold('/addcommand')}`;
+    }
+    else {
+     reply = '' + list.length + ' commands are available:';
+     list.forEach((command) => {
+       reply += `\n/${Md.bold(command._id)}`;
+     });
+    }
+    return bot.reply(message, reply);
+  });
 }
 
 let subscription: Subscription;
+
+function assignDefaultsOptions (options: any) {
+  options = options || {};
+  options.commandCharacter = options.commandCharacter || '/';
+  return options
+}
 
 export const plugin: SlaveBotPlugin = {
 
   name: 'commands',
   version: '1.0.0',
-
+  description: 'Manage custom commands',
   register (plugin: PluginConfiguration): Observable<any> {
 
     const { bot, db } = plugin;
+
+    const options = assignDefaultsOptions(plugin.options);
 
     subscription = fromDiscordEvent(bot, 'message').subscribe((message: Message) => {
 
@@ -124,14 +132,21 @@ export const plugin: SlaveBotPlugin = {
           commandList(bot, db, message);
           break;
         default:
-          if (parts[0].startsWith('/')) {
+          if (parts[0].startsWith(options.commandCharacter)) {
             executeCommand(bot, db, message);
           }
       }
     });
 
     return Observable.create((observer) => {
-      db.loadDatabase((() => observer.complete()));
+      db.ensureIndex({ fieldName: 'server' }, (err) => {
+        if (err) {
+          observer.error(err);
+        }
+        else {
+          db.loadDatabase((() => observer.complete()));
+        }
+      });
     });
   },
 

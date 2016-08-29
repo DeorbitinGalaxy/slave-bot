@@ -7,6 +7,11 @@ const config: SlaveBotConfig = require('../slave.json');
 
 const server = new SlaveBotServer(config);
 
-server.start().subscribe(() => {
-  console.log('Slave bot started');
-});
+server.ready.subscribe((ready) => {
+  if (ready) {
+    console.log('Slave bot started');
+  }
+})
+
+server.start();
+

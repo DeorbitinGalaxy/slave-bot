@@ -2,6 +2,7 @@ import { SlaveBotConfig } from './config';
 import { Client } from 'discord.js';
 import { fromDiscordEvent } from './utils/discord-event';
 import { SlaveBotPlugin } from './plugins/plugin';
+import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/empty';
 import { Observer } from 'rxjs/Observer';
@@ -18,8 +19,11 @@ export interface PluginConfiguration {
 
 export class SlaveBotServer {
 
+  private _ready: BehaviorSubject<boolean> = new BehaviorSubject(false);
+  public ready: Observable<any> = this._ready.asObservable();
   private bot: Client;
   private plugins: { [name: string]: SlaveBotPlugin } = {};
+  private options: { [name: string]: any } = {};
   private _methods: { [name: string]: Function } = {};
 
 
@@ -72,25 +76,43 @@ export class SlaveBotServer {
   /**
    * Unload a plugin at runtime.
    */
-  unloadPlugin (message: Message, name: string) {
+  unloadPlugin (message: Message, name: string): void {
 
     if (this.plugins[name] && this.isElevated(message)) {
       this.plugins[name].destroy();
     }
   }
 
-  loadPlugin (message: Message, name: string) {
+  loadPlugin (message: Message, name: string, options: any = null): Observable<any> {
 
+    if (this.plugins[name] && this.isElevated(message)) {
+      if (options === null) {
+        options = this.options[name];
+      }
+
+      return this.register(name, options);
+    }
+
+    return Observable.throw({ code: 404, message: 'Plugin not found' });
+  }
+
+  private register (name: string, options: any = null): Observable<any> {
+
+    return this.plugins[name].register({
+      server: this,
+      options: options,
+      bot: this.bot,
+      db: new Datastore(`./databases/${name}.db`)
+    });
   }
 
   pluginList () {
 
     return Object.keys(this.plugins).map((key: string) => {
       const plugin = this.plugins[key];
-      return { name: plugin.name, version: plugin.version };
+      return { name: plugin.name, version: plugin.version, description: plugin.description };
     });
   }
-
 
   private _setup () {
 
@@ -102,39 +124,31 @@ export class SlaveBotServer {
       if (this.config.botUsername) {
         this.bot.setUsername(this.config.botUsername);
       }
+
+      this._ready.next(true);
     });
 
-    const slavePluginsPaths: string[] = [
-      'commands',
-      'plugin-list',
-      'code'
-    ];
+    const plugins = this.config.plugins || [];
 
-    const configPluginPaths = this.config.plugins || [];
+    plugins.forEach(
+      (pluginConfig: any) => {
+        if (!pluginConfig.name) {
+          throw new Error(`Missing plugin name: ${JSON.stringify(pluginConfig)}`);
+        }
 
+        const local = typeof pluginConfig.path === 'undefined';
+        const path = local ? `./plugins/${pluginConfig.name}` : pluginConfig.path;
 
-    slavePluginsPaths.forEach(
-      (path: string) => {
-        const { plugin } = require(`./plugins/${path}`);
-        this.plugins[plugin.name] = plugin;
-      }
-    );
-
-    configPluginPaths.forEach(
-      (path: string) => {
         const { plugin } = require(path);
         this.plugins[plugin.name] = plugin;
+
+        this.options[plugin.name] = pluginConfig.options || null;
       }
-    );
+    )
+
 
     const observables = Object.keys(this.plugins).map((key: string) => {
-      const plugin: SlaveBotPlugin = this.plugins[key];
-      return plugin.register({
-        server: this,
-        options: null,
-        bot: this.bot,
-        db: new Datastore(`./databases/${key}.db`)
-      });
+      return this.register(key, this.options[key]);
     });
 
     this.registrations = Observable.forkJoin(
@@ -143,30 +157,24 @@ export class SlaveBotServer {
 
   }
 
-  public start (): Observable<any> {
+  public start (): void {
 
     if (this.started) {
-      return Observable.empty();
+      return;
     }
 
     this.started = true;
 
-    return Observable.create((observer: Observer<any>) => {
-      this.registrations.subscribe(
-        () => {},
-        (err) => observer.error(err),
-        () => {
-          this.bot.loginWithToken(this.config.botToken, null, null, (err) => {
-            if (err) {
-              observer.error(err);
-            }
-            else {
-              observer.next(null);
-              observer.complete();
-            }
-          });
-        }
-      );
-    });
+    this.registrations.subscribe(
+      () => {},
+      (err) => { throw err },
+      () => {
+        this.bot.loginWithToken(this.config.botToken, null, null, (err) => {
+          if (err) {
+            throw err;
+          }
+        });
+      }
+    );
   }
 }

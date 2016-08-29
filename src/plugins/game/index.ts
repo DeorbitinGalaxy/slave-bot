@@ -8,33 +8,22 @@ import { split } from '../../utils/message-utils';
 import * as Md from '../../utils/markdown';
 import { fromDiscordEvent } from '../../utils/discord-event';
 
-
 let subscription: any;
 
 export const plugin: SlaveBotPlugin = {
-  name: 'plugin-list',
+  name: 'game',
   version: '1.0.0',
-  description: 'Display the plugin list',
+  description: 'Change the bot playing game. The update is seen on all the servers the bot is connected to',
   register (plugin: PluginConfiguration) {
 
     subscription = fromDiscordEvent(plugin.bot, 'message').subscribe((message: Message) => {
 
       const parts: string[] = split(message);
 
+      if (parts[0] === '/slavegame' && plugin.server.isElevated(message)) {
 
-      if (parts[0] === '/pluginlist' && plugin.server.isElevated(message)) {
-
-        const list = plugin.server.pluginList();
-        let reply = 'Plugins registered:';
-
-        list.forEach((plugin: any) => {
-          const d = plugin.description;
-          reply = `${reply}\n${Md.bold(plugin.name)} - ${Md.italic('v' + plugin.version)} - ${d ? d : 'No description available'}`;
-        });
-
-        return plugin.bot.reply(message, reply);
+        return plugin.bot.setPlayingGame(parts[1] || null);
       }
-
     });
 
     return Observable.empty();
@@ -43,4 +32,3 @@ export const plugin: SlaveBotPlugin = {
     subscription.unsubscribe();
   }
 }
-

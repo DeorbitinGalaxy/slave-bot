@@ -13,6 +13,7 @@ let subscription: any;
 export const plugin: SlaveBotPlugin = {
   name: 'code',
   version: '1.0.0',
+  description: 'Paste code using Markdown',
   register (plugin: PluginConfiguration) {
 
     subscription = fromDiscordEvent(plugin.bot, 'message').subscribe((message: Message) => {
