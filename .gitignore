@@ -1,6 +1,5 @@
 node_modules
 dist
 typings
-typings.json
 databases
 slave.json

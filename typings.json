@@ -1,0 +1,10 @@
+{
+  "name": "slave-bot",
+  "dependencies": {},
+  "globalDependencies": {
+    "core-js": "registry:dt/core-js#0.0.0+20160725163759",
+    "discord.js": "github:nicholastay/discord.js.d.ts#33b375bbb4a2cad6d708399398ebd8914d8d2f3b",
+    "nedb": "registry:dt/nedb#0.0.0+20160505185910",
+    "node": "registry:dt/node#6.0.0+20160826120425"
+  }
+}
