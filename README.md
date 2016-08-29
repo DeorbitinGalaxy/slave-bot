@@ -39,7 +39,7 @@ Every plugin has its own database collection, if you don't need the database, yo
 
 ## Try it: (work in progress)
 
-* Create an application in your discord dashboard
+* Create an application in your [discord dashboard](https://discordapp.com/developers/applications/me#top)
 * Create a bot
 * Clone the project
 * Create a slave.json file
