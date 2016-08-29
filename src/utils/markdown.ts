@@ -23,12 +23,26 @@ export function build (...args: string[]) {
   return args.join('');
 }
 
-export function multilineCode (text: string) {
+export function multilineCode (text: string, language: string = '') {
 
   return build(
-    line('```'),
+    line('```' + language),
     text,
     line('```')
   );
 }
 
+export function strike (text: string) {
+
+  return '<s>' + text + '</s>';
+}
+
+export function quote (text: string) {
+
+  return '> ' + text;
+}
+
+export function video (url: string) {
+
+  return '[[embed url=' + url + ']]';
+}
