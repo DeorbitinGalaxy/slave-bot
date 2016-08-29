@@ -1,7 +1,4 @@
-import { Client } from 'discord.js';
 import { Observable } from 'rxjs/Observable';
-import * as Datastore from 'nedb';
-
 import { PluginConfiguration } from '../server';
 
 export interface SlaveBotPlugin {
@@ -12,3 +9,5 @@ export interface SlaveBotPlugin {
   dependencies?: string[];
   description?: string;
 }
+
+export { PluginConfiguration, SlaveBotServer } from '../server';
