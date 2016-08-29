@@ -10,7 +10,7 @@ The `slave.json` contains:
 {
     // Your bot token that you can find by creating a bot in the Discord dashboard
     botToken: YOUR_BOT_TOKEN,
-    
+
     botUsername: BOT_USERNAME, // optional
     initialPlayingGame: PLAYING_GAME, // optional
     // Array of plugins, optional
