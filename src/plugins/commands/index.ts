@@ -8,6 +8,7 @@ import * as Datastore from 'nedb';
 import { fromDiscordEvent } from '../../utils/discord-event';
 import { split, getDoubleQuotedText } from '../../utils/message-utils';
 import * as Md from '../../utils/markdown';
+import { PluginConfiguration } from '../../server';
 
 function registerCommand (bot: Client, db: Datastore, message: Message, parts: string[]) {
   const command: string = parts[1];
@@ -99,12 +100,14 @@ function commandList (bot: Client, db: Datastore, message: Message) {
 
 let subscription: Subscription;
 
-export const name: string = 'commands';
-export const version: string = '1.0.0';
 export const plugin: SlaveBotPlugin = {
 
-  register (bot: Client, db: Datastore): Observable<any> {
+  name: 'commands',
+  version: '1.0.0',
 
+  register (plugin: PluginConfiguration): Observable<any> {
+
+    const { bot, db } = plugin;
 
     subscription = fromDiscordEvent(bot, 'message').subscribe((message: Message) => {
 

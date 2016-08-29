@@ -2,7 +2,11 @@ import { Client } from 'discord.js';
 import { Observable } from 'rxjs/Observable';
 import * as Datastore from 'nedb';
 
+import { PluginConfiguration } from '../server';
+
 export interface SlaveBotPlugin {
-  register: (bot: Client, db?: Datastore) => Observable<any>;
+  name: string;
+  version: string;
+  register: (plugin: PluginConfiguration) => Observable<any>;
   destroy: () => void;
 }
