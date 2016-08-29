@@ -29,7 +29,7 @@ function registerCommand (bot: Client, db: Datastore, message: Message, parts: s
     else if (content.error === 400) {
       return bot.reply(message, 'Missing double quote');
     }
-}
+  }
 
   db.insert({
     _id: command,
@@ -89,7 +89,7 @@ function commandList (bot: Client, db: Datastore, message: Message) {
     reply = `No command registered. Register your first command by using ${Md.bold('/addcommand')}`;
   }
   else {
-   reply = 'Command list:';
+   reply = '' + list.length + ' commands are available:';
    list.forEach((command) => {
      reply += `\n/${Md.bold(command._id)}`;
    });

@@ -27,7 +27,7 @@ A plugin is a module that export:
 * a object called `plugin` with two methods: `register` and `destroy`.
 
 It follows this interface:
-```
+```js
 export interface SlaveBotPlugin {
   register: (bot: Client, db?: Datastore) => Observable<any>;
   destroy: () => void;
@@ -39,7 +39,7 @@ Every plugin has its own database collection, if you don't need the database, yo
 
 ## Try it: (work in progress)
 
-* Create an application in your discord dashboard
+* Create an application in your [discord dashboard](https://discordapp.com/developers/applications/me#top)
 * Create a bot
 * Clone the project
 * Create a slave.json file
@@ -51,4 +51,8 @@ Every plugin has its own database collection, if you don't need the database, yo
 The client id can be found in your application created in the dashboard.
 The permissions can be found in the Discord documentation. Basic permissions for read/write are: `3072`.
 
+* `npm install`
+* `typings install`
+* `npm run tsc:watch`
+* `npm start`
 
