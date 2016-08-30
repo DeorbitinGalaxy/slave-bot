@@ -3,3 +3,4 @@ dist
 typings
 databases
 slave.json
+.idea
