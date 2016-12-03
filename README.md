@@ -28,7 +28,7 @@ A plugin is a module that export:
     + a register method
     + a destroy method
     + an optional description
-    + a list of dependencies. The dependencies are plugins that need to be loaded before this plugin is loaded.
+    + a optional usage description
 
 It follows this interface:
 ```js
@@ -36,13 +36,11 @@ export interface SlaveBotPlugin {
   name: string;
   version: string;
   description?: string;
-  dependencies?: string[];
+  usage?: string;
   register: (plugin: PluginConfiguration) => Observable<any>;
   destroy: () => void;
 }
 ```
-
-(dependencies is not implemented yet).
 
 
 The plugin configuration objects takes the plugin database (one database per plugin), the server, the bot client and the plugin options.
@@ -63,16 +61,8 @@ The client id can be found in your application created in the dashboard.
 The permissions can be found in the Discord documentation. Basic permissions for read/write are: `3072`.
 
 * `npm install`
-* `typings install`
 * `npm run tsc:watch`
 * `npm start:watch`
 
-## Create a plugin (npm install does not work yet)
-
-* npm init
-* npm install @slave-bot/plugin --save (used for typescript types)
-    + You can omit this step if you're wriing your plugin is JavaScript
-* Write your plugin
-* npm publish
 
 
