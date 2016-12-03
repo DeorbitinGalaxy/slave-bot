@@ -4,3 +4,4 @@ typings
 databases
 slave.json
 .idea
+*.log

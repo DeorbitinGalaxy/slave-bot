@@ -8,6 +8,7 @@ export interface SlaveBotPlugin {
   destroy: () => void;
   dependencies?: string[];
   description?: string;
+  usage?: string;
 }
 
 export { PluginConfiguration, SlaveBotServer } from '../server';

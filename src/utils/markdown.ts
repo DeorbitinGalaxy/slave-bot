@@ -1,21 +1,21 @@
-export function line (text: string = '') {
+export function line (...text: string[]) {
 
-  return `${text}\n`;
+  return `${text.join('')}\n`;
 }
 
-export function bold (text: string) {
+export function bold (...text: string[]) {
 
-  return `**${text}**`;
+  return `**${text.join('')}**`;
 }
 
-export function italic (text: string) {
+export function italic (...text: string[]) {
 
-  return `*${text}*`;
+  return `*${text.join('')}*`;
 }
 
-export function code (text: string) {
+export function code (...text: string[]) {
 
-  return '`' + text + '`';
+  return '`' + text.join('') + '`';
 }
 
 export function build (...args: string[]) {

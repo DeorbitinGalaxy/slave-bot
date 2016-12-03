@@ -10,45 +10,115 @@ import { split, getDoubleQuotedText } from '../../utils/message-utils';
 import * as Md from '../../utils/markdown';
 import { PluginConfiguration } from '../../server';
 
-const internals: any = {};
+
+const internals: any = {
+  guilds: {},
+  // http://www.fon.hum.uva.nl/praat/manual/Regular_expressions_1__Special_characters.html
+  specialCharacters: {
+    '\\': '\\\\',
+    '^': '\\^',
+    '$': '\\$',
+    '{': '\\{',
+    '}': '\\}',
+    '[': '\\[',
+    ']': '\\]',
+    '(': '\\(',
+    ')': '\\)',
+    '.': '\\.',
+    '*': '\\*',
+    '+': '\\+',
+    '?': '\\?',
+    '|': '\\|',
+    '<': '\\<',
+    '>': '\\>',
+    '-': '\\-',
+    '&': '\\&',
+  }
+};
+
+function escape (text: string) {
+  let value: string = '';
+  for (let i = 0; i < text.length; ++i) {
+    if (internals.specialCharacters[text[i]]) {
+      value += internals.specialCharacters[text[i]];
+    }
+    else {
+      value += text[i];
+    }
+  }
+
+  return value;
+}
+
+function loadCommands (db: Datastore, guild: string) {
+  return new Promise((resolve, reject) => {
+    db.find({ guild }, (err, list) => {
+      if (err) {
+        reject(err);
+      }
+      else {
+        internals.guilds[guild] = list;
+        resolve(list);
+      }
+    });
+  })
+}
 
 function registerCommand (bot: Client, db: Datastore, message: Message, parts: string[]) {
+
   const command: string = parts[1];
 
   if (!command) {
-    return bot.reply(message, Md.build(
-      `Missing command name. Usage: /addcommand ${Md.bold('commandname')} "Display something".,
+    return message.reply(Md.build(
+      `Missing command name. Usage: /addcmd ${Md.bold('commandname')} "Display something".,
       'The double quotes are optional if the content is only one word short.`
     ));
   }
 
-  const content: any = getDoubleQuotedText(parts,  2);
+  const { error, text, index }: any = getDoubleQuotedText(parts, 2);
 
-  if (content.error) {
-    if (content.error === 404) {
-      return bot.reply(message, 'Missing command content');
+  if (error) {
+    if (error === 404) {
+      return message.reply('Missing command content');
     }
-    else if (content.error === 400) {
-      return bot.reply(message, 'Missing double quote');
+    else if (error === 400) {
+      return message.reply('Missing double quote');
+    }
+  }
+
+  let matching: string = 'start';
+
+  if (index < parts.length) {
+    if (['start', 'match', 'startonly'].includes(parts[index])) {
+      matching = parts[index];
+    }
+    else {
+      return message.reply('Wrong matching strategy: must be start or match')
     }
   }
 
   db.insert({
-    _id: `${message.server.id}-${command}`,
+    _id: `${message.guild.id}-${command}`,
     name: command,
-    server: message.server.id,
-    content: content.text
+    guild: message.guild.id,
+    content: text,
+    matching: matching
   }, (err: any) => {
+
     if (err && err.errorType === 'uniqueViolated') {
-      return bot.reply(message, `Command ${Md.bold(command)} already exist.`);
+      return message.reply(`Command ${Md.bold(command)} already exist.`);
     }
-    const first: string = internals.options.commandCharacter;
-    return bot.reply(message, Md.build(
-      Md.line(),
-      Md.line(`Registered command: ${Md.bold(command)}`),
-      Md.line(`Usage: ${Md.bold(first + command)}`),
-      Md.line(`Command content: ${Md.bold(content.text)}`)
-    ));
+
+    return loadCommands(db, message.guild.id).then(() => {
+      return message.reply(Md.build(
+        Md.line(),
+        Md.line('Registered command: ', Md.bold(command)),
+        Md.line('Usage: ', Md.bold(command)),
+        Md.line('Matching strategy: ', Md.bold(matching)),
+        Md.line('Command content: ', Md.bold(text))
+      ));
+    });
+
   });
 
 }
@@ -59,62 +129,102 @@ function deleteCommand (bot: Client, db: Datastore, message: Message) {
   const command = parts[1];
 
   if (!command) {
-    return bot.reply(message, 'Missing command name');
+    return message.reply('Missing command name');
   }
 
-  db.remove({ _id: `${message.server.id}-${command}` }, (err, num) => {
-    const first = internals.options.commandCharacter;
+  db.remove({ _id: `${message.guild.id}-${command}` }, (err, num) => {
+
     if (err || num === 0) {
-      return bot.reply(message, `Command ${Md.bold(first + command)} does not exist`);
+      return message.reply(`Command ${Md.bold(command)} does not exist`);
     }
 
-    return bot.reply(message, `Command ${Md.bold(first + command)} removed`);
+    return loadCommands(db, message.guild.id).then(() => {
+      return message.reply(`Command ${Md.bold(command)} removed`);
+    });
   });
 }
 
-function executeCommand (bot: Client, db: Datastore, message: Message) {
 
-  const parts: string[] = split(message);
+function handleCommand (command: any, message: Message) {
+  let regex: RegExp;
 
-  const command: string = parts[0];
+  switch (command.matching) {
+    case 'start': 
+      regex = new RegExp(`^${escape(command.name)}(\\s|$)`);
+      break;
+    case 'startonly': 
+      regex = new RegExp(`^${escape(command.name)}$`);
+      break;
+    case 'match':
+      regex = new RegExp(`(^|\\s)${escape(command.name)}(\\s|$)`);
+      break;
+  }
+  
+  const match = regex.test(message.content);
+  if (match) {
+    message.channel.sendMessage(command.content);
+  }
 
-  db.findOne({ _id: `${message.server.id}-${command.slice(1)}` }, (err, doc: any) => {
-    if (!err && doc) {
-      bot.sendMessage(message.channel, doc.content);
+  return match;
+}
+
+function handlePossibleCommand (list: any[], message: Message) {
+
+  const content = message.content;
+
+  for (let i = 0; i < list.length; ++i) {
+    if (handleCommand(list[i], message)) {
+      break;
     }
-  })
+  }
 }
 
 function commandList (bot: Client, db: Datastore, message: Message) {
 
-  db.find({ server: message.server.id }, (err, list) => {
+  function display (list: any) {
     let reply: string;
     if (list.length === 0) {
-      reply = `No command registered. Register your first command by using ${Md.bold('/addcommand')}`;
+      reply = `No command registered. Register your first command by using ${Md.bold('/addcmd')}`;
     }
     else {
-     reply = '' + list.length + ' commands are available:';
-     list.forEach((command) => {
-       reply += `\n/${Md.bold(command.name)}`;
-     });
+      reply = Md.line(list.length, ' commands are available:');
+      list.forEach((command) => {
+        reply += Md.line(Md.bold(command.name));
+      });
     }
-    return bot.reply(message, reply);
-  });
+
+    return message.reply(reply);
+  }
+
+  if (internals.guilds[message.guild.id]) {
+    console.log('cached');
+    display(internals.guilds[message.guild.id]);
+  }
+  else {
+    loadCommands(db, message.guild.id).then((list) => display(list));
+  }
 }
 
 let subscription: Subscription;
 
 function assignDefaultsOptions (options: any) {
   options = options || {};
-  options.commandCharacter = options.commandCharacter || '/';
   return options
 }
 
 export const plugin: SlaveBotPlugin = {
-
   name: 'commands',
   version: '1.0.0',
   description: 'Manage custom commands',
+  usage: `
+    /addcmd {command} {message} [start|match|startonly]
+    Matching strategies: 
+      start: Match command at the start of the message (followed by a message or not)
+      match: Match command in the all message
+      startonly: Match command at the start of the message without a following message
+    /delcmd {command}
+    /cmdlist
+  `,
   register (plugin: PluginConfiguration): Observable<any> {
 
     const { bot, db } = plugin;
@@ -126,24 +236,27 @@ export const plugin: SlaveBotPlugin = {
       const parts: string[] = split(message);
 
       switch (parts[0]) {
-        case '/addcommand':
+        case '/addcmd':
           registerCommand(bot, db, message, parts);
           break;
-        case '/deletecommand':
+        case '/delcmd':
           deleteCommand(bot, db, message);
           break;
-        case '/commandlist':
+        case '/cmdlist':
           commandList(bot, db, message);
           break;
         default:
-          if (parts[0].startsWith(internals.options.commandCharacter)) {
-            executeCommand(bot, db, message);
+          if (internals.guilds[message.guild.id]) {
+            handlePossibleCommand(internals.guilds[message.guild.id], message);
+          }
+          else {
+            loadCommands(db, message.guild.id).then((list: any[]) => handlePossibleCommand(list, message));
           }
       }
     });
 
     return Observable.create((observer) => {
-      db.ensureIndex({ fieldName: 'server' }, (err) => {
+      db.ensureIndex({ fieldName: 'guild' }, (err) => {
         if (err) {
           observer.error(err);
         }

@@ -1,13 +1,13 @@
+import { Client, Message } from 'discord.js';
+import { Observable } from 'rxjs/Observable';
+import { BehaviorSubject } from 'rxjs/BehaviorSubject';
+import { Observer } from 'rxjs/Observer';
+import 'rxjs/add/observable/empty';
+import * as Datastore from 'nedb';
+
 import { SlaveBotConfig } from './config';
-import { Client } from 'discord.js';
 import { fromDiscordEvent } from './utils/discord-event';
 import { SlaveBotPlugin } from './plugins/plugin';
-import { BehaviorSubject } from 'rxjs/BehaviorSubject';
-import { Observable } from 'rxjs/Observable';
-import 'rxjs/add/observable/empty';
-import { Observer } from 'rxjs/Observer';
-import * as Datastore from 'nedb';
-import { Message } from 'discord.js';
 
 
 export interface PluginConfiguration {
@@ -15,6 +15,13 @@ export interface PluginConfiguration {
   bot: Client;
   db: Datastore;
   options?: any;
+}
+
+export interface PluginSummary {
+  name: string;
+  version: string;
+  description?: string;
+  usage?: string;
 }
 
 export class PluginContainer {
@@ -82,12 +89,12 @@ export class SlaveBotServer {
 
   isElevated (message: Message): boolean {
 
-    const server = message.server;
-    const roles = server.roles;
+    const { roles } = message.guild;
     const name = this.config.adminRole || 'Slave Master';
-    const role = roles.get('name', name);
+    const role = roles.find('name', name);
+    const member = message.member;
 
-    return role ? message.author.hasRole(role) : false;
+    return (role && member) ? member.roles.exists('name', role.name) : false;
   }
 
   method (name: string, ...args: any[]): any {
@@ -149,11 +156,26 @@ export class SlaveBotServer {
     });
   }
 
-  pluginList () {
+  pluginInfo (pluginName: string): PluginSummary {
+    
+    const plugin = this.plugins[pluginName];
+    if (!plugin) {
+      return null;
+    }
+
+    const { name, version, description, usage } = this.plugins[pluginName];
+    return {
+      name, version, description, usage
+    };
+  }
+
+  pluginList (): PluginSummary[] {
 
     return Object.keys(this.plugins).map((key: string) => {
-      const plugin = this.plugins[key];
-      return { name: plugin.name, version: plugin.version, description: plugin.description };
+      const { name, version, description, usage } = this.plugins[key];
+      return { 
+        name, version, description, usage
+      };
     });
   }
 
@@ -161,11 +183,11 @@ export class SlaveBotServer {
 
     fromDiscordEvent(this.bot, 'ready').subscribe(() => {
       if (this.config.initialPlayingGame) {
-        this.bot.setPlayingGame(this.config.initialPlayingGame);
+        this.bot.user.setGame(this.config.initialPlayingGame);
       }
 
       if (this.config.botUsername) {
-        this.bot.setUsername(this.config.botUsername);
+        this.bot.user.setUsername(this.config.botUsername);
       }
 
       this._ready.next(true);
@@ -212,12 +234,21 @@ export class SlaveBotServer {
       () => {},
       (err) => { throw err },
       () => {
-        this.bot.loginWithToken(this.config.botToken, null, null, (err) => {
+        this.bot.login(this.config.botToken, null).catch((err) => {
           if (err) {
             throw err;
           }
+
+          this.bot.user.setStatus('online');
         });
       }
     );
+  }
+
+  public quit (): void {
+    if (this.started) {
+      console.log('offline');
+      this.bot.user.setStatus('offline');
+    }
   }
 }

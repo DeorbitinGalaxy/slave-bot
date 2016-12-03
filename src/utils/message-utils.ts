@@ -4,7 +4,14 @@ export function split (message: Message, separator: string = ' '): string[] {
   return message.content.trim().split(separator);
 }
 
-export function getDoubleQuotedText (parts: string[], startIndex: number): any {
+
+export interface DoubleQuotedText {
+  text?: string;
+  index?: number;
+  error?: number;
+}
+
+export function getDoubleQuotedText (parts: string[], startIndex: number): DoubleQuotedText {
 
   let content = parts[startIndex];
 
@@ -12,9 +19,9 @@ export function getDoubleQuotedText (parts: string[], startIndex: number): any {
     return { error: 404 };
   }
 
+  let index = startIndex;
   // extract the double quoted string
   if (content.startsWith('"')) {
-    let index = startIndex;
     while (!content.endsWith('"') && ++index < parts.length) {
       content = `${content} ${parts[index]}`;
     }
@@ -27,5 +34,5 @@ export function getDoubleQuotedText (parts: string[], startIndex: number): any {
     content = content.slice(1, content.length - 1);
   }
 
-  return { text: content };
+  return { text: content, index: index + 1 };
 }

@@ -4,40 +4,33 @@ import 'rxjs/add/observable/empty';
 
 import { SlaveBotPlugin } from '../plugin';
 import { PluginConfiguration } from '../../server';
-import { split } from '../../utils/message-utils';
+import { split, getDoubleQuotedText } from '../../utils/message-utils';
 import * as Md from '../../utils/markdown';
 import { fromDiscordEvent } from '../../utils/discord-event';
 
 let subscription: any;
 
 export const plugin: SlaveBotPlugin = {
-  name: 'code',
+  name: 'avatar',
   version: '1.0.0',
-  description: 'Paste code using Markdown',
-  usage: '/code {snippet}',
+  description: 'Change the bot avatar. The update is seen on all the servers the bot is connected to',
+  usage: '/slaveavatar {game}',
   register (plugin: PluginConfiguration) {
-
+    
     subscription = fromDiscordEvent(plugin.bot, 'message').subscribe((message: Message) => {
 
-      const parts: string[] = split(message);
+      if (!plugin.server.isElevated(message)) {
+        return;
+      }
 
-      if (parts[0] === '/code' && plugin.server.isElevated(message)) {
+      const parts: string[] = split(message);
+      if (parts[0] === '/slaveavatar') {
 
         if (!parts[1]) {
-          return message.reply('Missing code');
+          return message.reply('Missing url');
         }
 
-        const code = parts.slice(1, parts.length);
-        const args: any = plugin.server.parseArgs(code);
-
-        return message.delete().then(() => {
-          return message.channel.sendMessage(
-            Md.build(
-            Md.line(`From ${message.author.toString()}`),
-            Md.line(),
-            Md.multilineCode(args._.join(' '), args.l)
-          ));
-        });
+        return plugin.bot.user.setAvatar(parts[1] || null);
       }
     });
 
