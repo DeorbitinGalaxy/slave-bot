@@ -1,7 +1,11 @@
 {
   "compilerOptions": {
     "module": "commonjs",
-    "outDir": "dist"
+    "outDir": "dist",
+    "typeRoots": [
+      "node_modules/@types",
+      "manual_typings"
+    ]
   },
   "exclude": [
     "node_modules"

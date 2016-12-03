@@ -17,6 +17,49 @@ export interface PluginConfiguration {
   options?: any;
 }
 
+export class PluginContainer {
+
+  public isRegistered: boolean = false;
+
+  private subscriptions: any[] = [];
+
+  constructor (
+    private bot: Client,
+    private plugin: SlaveBotPlugin,
+    public options: any = {}
+  ) {}
+
+  subscribe (event: string, handler: Function) {
+
+    this.subscriptions.push(
+      fromDiscordEvent(this.bot, event).subscribe((...args: any[]) => {
+        handler(...args);
+      })
+    );
+  }
+
+  register (): Observable<any> {
+
+    if (this.isRegistered) {
+      return;
+    }
+
+    if (!this.plugin.register) {
+      throw new Error('SlaveBotPlugin needs a register method');
+    }
+  }
+
+  destroy (): void {
+
+    if (this.plugin.destroy) {
+      this.plugin.destroy();
+    }
+
+    this.subscriptions.forEach((subscription: any) => subscription.unsubscribe());
+    this.isRegistered = false;
+  }
+}
+
 export class SlaveBotServer {
 
   private _ready: BehaviorSubject<boolean> = new BehaviorSubject(false);
