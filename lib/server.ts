@@ -8,6 +8,7 @@ import 'rxjs/add/observable/empty';
 import 'rxjs/add/observable/forkJoin';
 
 import * as Datastore from 'nedb';
+import * as minimist from 'minimist';
 
 import { SlaveBotConfig } from './config';
 import { fromDiscordEvent } from './utils/discord-event';
@@ -125,7 +126,7 @@ export class SlaveBotServer {
    */
   parseArgs (args: any[]) {
 
-    return require('minimist')(args);
+    return minimist(args);
   }
 
   /**

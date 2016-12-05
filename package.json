@@ -31,6 +31,7 @@
   "homepage": "https://github.com/fknop/slave-bot#readme",
   "devDependencies": {
     "@types/core-js": "^0.9.35",
+    "@types/minimist": "^1.1.29",
     "@types/nedb": "0.0.31",
     "@types/node": "0.0.2",
     "nodemon": "^1.10.2",
