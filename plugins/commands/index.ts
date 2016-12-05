@@ -4,46 +4,20 @@ import 'rxjs/add/observable/bindCallback';
 import { Subscription } from 'rxjs/Subscription';
 import * as Datastore from 'nedb';
 
-import { SlaveBotPlugin, fromDiscordEvent, split, getDoubleQuotedText, Md, PluginConfiguration } from '../../lib';
+import { 
+  SlaveBotPlugin, 
+  fromDiscordEvent, 
+  split, 
+  getDoubleQuotedText, 
+  Md, 
+  PluginConfiguration,
+  escape
+} from '../../lib';
 
 const internals: any = {
   guilds: {},
   // http://www.fon.hum.uva.nl/praat/manual/Regular_expressions_1__Special_characters.html
-  specialCharacters: {
-    '\\': '\\\\',
-    '^': '\\^',
-    '$': '\\$',
-    '{': '\\{',
-    '}': '\\}',
-    '[': '\\[',
-    ']': '\\]',
-    '(': '\\(',
-    ')': '\\)',
-    '.': '\\.',
-    '*': '\\*',
-    '+': '\\+',
-    '?': '\\?',
-    '|': '\\|',
-    '<': '\\<',
-    '>': '\\>',
-    '-': '\\-',
-    '&': '\\&',
-  }
 };
-
-function escape (text: string) {
-  let value: string = '';
-  for (let i = 0; i < text.length; ++i) {
-    if (internals.specialCharacters[text[i]]) {
-      value += internals.specialCharacters[text[i]];
-    }
-    else {
-      value += text[i];
-    }
-  }
-
-  return value;
-}
 
 function loadCommands (db: Datastore, guild: string) {
   return new Promise((resolve, reject) => {

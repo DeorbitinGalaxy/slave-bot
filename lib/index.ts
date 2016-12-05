@@ -7,3 +7,4 @@ export { Md };
 
 export * from './utils/discord-event';
 export * from './utils/message-utils';
+export * from './utils/regex';
