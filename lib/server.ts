@@ -19,6 +19,7 @@ export interface PluginConfiguration {
   bot: Client;
   db: Datastore;
   options?: any;
+  state: any;
 }
 
 export interface PluginSummary {
@@ -30,46 +31,36 @@ export interface PluginSummary {
 
 const PLUGIN_DIR: string = '../plugins';
 
-export class PluginContainer {
+class PluginContainer {
 
-  public isRegistered: boolean = false;
-
-  private subscriptions: any[] = [];
+  private configuration: PluginConfiguration;
 
   constructor (
+    private server: SlaveBotServer,
     private bot: Client,
-    private plugin: SlaveBotPlugin,
-    public options: any = {}
-  ) {}
-
-  subscribe (event: string, handler: Function) {
-
-    this.subscriptions.push(
-      fromDiscordEvent(this.bot, event).subscribe((...args: any[]) => {
-        handler(...args);
-      })
-    );
+    public plugin: SlaveBotPlugin,
+    private db: Datastore,
+    private options: any = {}
+  ) {
+    this.configuration = { server, bot, db, options, state: {} };
   }
 
-  register (): Observable<any> {
 
-    if (this.isRegistered) {
-      return;
+  register (): Promise<any> {
+
+    if (this.plugin.register) {
+      return this.plugin.register(this.configuration);
     }
-
-    if (!this.plugin.register) {
-      throw new Error('SlaveBotPlugin needs a register method');
+    else {
+      return Promise.resolve();
     }
   }
 
   destroy (): void {
 
     if (this.plugin.destroy) {
-      this.plugin.destroy();
+      this.plugin.destroy(this.configuration);
     }
-
-    this.subscriptions.forEach((subscription: any) => subscription.unsubscribe());
-    this.isRegistered = false;
   }
 }
 
@@ -78,10 +69,8 @@ export class SlaveBotServer {
   private _ready: BehaviorSubject<boolean> = new BehaviorSubject(false);
   public ready: Observable<any> = this._ready.asObservable();
   private bot: Client;
-  private plugins: { [name: string]: SlaveBotPlugin } = {};
-  private options: { [name: string]: any } = {};
+  private plugins: { [name: string]: PluginContainer } = {};
   private _methods: { [name: string]: Function } = {};
-
 
   private started: boolean = false;
   private registrations: Promise<any>;
@@ -159,47 +148,15 @@ export class SlaveBotServer {
     return minimist(args);
   }
 
-  /**
-   * Unload a plugin at runtime.
-   */
-  unloadPlugin (message: Message, name: string): void {
-
-    if (this.plugins[name] && this.isElevated(message)) {
-      this.plugins[name].destroy();
-    }
-  }
-
-  loadPlugin (message: Message, name: string, options: any = null): Promise<any> {
-
-    if (this.plugins[name] && this.isElevated(message)) {
-      if (options === null) {
-        options = this.options[name];
-      }
-
-      return this.register(name, options);
-    }
-
-    return Promise.reject({ code: 404, message: 'Plugin not found' });
-  }
-
-  private register (name: string, options: any = null): Promise<any> {
-
-    return this.plugins[name].register({
-      server: this,
-      options: options,
-      bot: this.bot,
-      db: new Datastore(`./databases/${name}.db`)
-    });
-  }
-
+ 
   pluginInfo (pluginName: string): PluginSummary {
     
-    const plugin = this.plugins[pluginName];
-    if (!plugin) {
+    const container = this.plugins[pluginName];
+    if (!container) {
       return null;
     }
 
-    const { name, version, description, usage } = this.plugins[pluginName];
+    const { name, version, description, usage } = container.plugin;
     return {
       name, version, description, usage
     };
@@ -208,7 +165,7 @@ export class SlaveBotServer {
   pluginList (): PluginSummary[] {
 
     return Object.keys(this.plugins).map((key: string) => {
-      const { name, version, description, usage } = this.plugins[key];
+      const { name, version, description, usage } = this.plugins[key].plugin;
       return { 
         name, version, description, usage
       };
@@ -241,13 +198,18 @@ export class SlaveBotServer {
         const path = local ? Path.posix.join(PLUGIN_DIR, config.name) : config.path;
 
         const { plugin } = require(path);
-        this.plugins[plugin.name] = plugin;
-        this.options[plugin.name] = config.options || null;
+        this.plugins[plugin.name] = new PluginContainer(
+          this, 
+          this.bot, 
+          plugin, 
+          new Datastore(`./databases/${plugin.name}.db`),
+          config.options || null
+        );
       }
     );
 
     const promises = Object.keys(this.plugins).map((key: string) => {
-      return this.register(key, this.options[key]);
+      return this.plugins[key].register();
     });
 
     this.registrations = Promise.all(promises);
@@ -272,7 +234,9 @@ export class SlaveBotServer {
 
       return this.bot.user.setStatus('invisible').then(() => {
         for (let plugin in this.plugins) {
-          this.plugins[plugin].destroy();
+          if (this.plugins[plugin].destroy) {
+            this.plugins[plugin].destroy();
+          }
         }
 
         return this.bot.destroy().then(() => this.started = false);

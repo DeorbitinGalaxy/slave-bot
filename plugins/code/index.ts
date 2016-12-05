@@ -3,7 +3,6 @@ import { Observable } from 'rxjs/Observable';
 
 import { SlaveBotPlugin, PluginConfiguration, split, Md, fromDiscordEvent } from '../../lib';
 
-let subscription: any;
 
 export const plugin: SlaveBotPlugin = {
   name: 'code',
@@ -37,8 +36,5 @@ export const plugin: SlaveBotPlugin = {
     });
 
     return Promise.resolve();
-  },
-  destroy () {
-    subscription.unsubscribe();
   }
 }
