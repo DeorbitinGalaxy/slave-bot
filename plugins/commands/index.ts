@@ -89,7 +89,7 @@ function registerCommand (bot: Client, db: Datastore, message: Message, parts: s
       matching = parts[index];
     }
     else {
-      return message.reply('Wrong matching strategy: must be start or match')
+      return message.reply('Wrong matching strategy: must be start, startonly or match')
     }
   }
 
@@ -183,7 +183,7 @@ function commandList (bot: Client, db: Datastore, message: Message) {
       reply = `No command registered. Register your first command by using ${Md.bold('/addcmd')}`;
     }
     else {
-      reply = Md.line(list.length, ' commands are available:');
+      reply = Md.line(list.length, (list.length > 1) ? ' commands are available:' : ' command is available:');
       list.forEach((command) => {
         reply += Md.line(Md.bold(command.name));
       });
