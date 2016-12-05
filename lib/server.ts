@@ -35,6 +35,8 @@ class PluginContainer {
 
   private configuration: PluginConfiguration;
 
+  private handlers: { [name: string]: any } = {};
+
   constructor (
     private server: SlaveBotServer,
     private bot: Client,
@@ -45,18 +47,39 @@ class PluginContainer {
     this.configuration = { server, bot, db, options, state: {} };
   }
 
-
   register (): Promise<any> {
 
     if (this.plugin.register) {
-      return this.plugin.register(this.configuration);
+      return this.plugin.register(this.configuration).then(() => this._listenEvents());
     }
     else {
-      return Promise.resolve();
+      return Promise.resolve().then(() => this._listenEvents());
+    }
+  }
+
+  private _listenEvents () {
+    const { events } = this.plugin;
+
+    if (!events) {
+      return;
+    }
+
+    for (let event in events) {
+
+      const handler = (...args: any[]) => {
+        events[event](this.configuration, ...args);
+      };
+
+      this.bot.on(event, handler);
+      this.handlers[event] = handler;
     }
   }
 
   destroy (): void {
+
+    for (let handler in this.handlers) {
+      this.bot.removeListener(handler, this.handlers[handler]);
+    }
 
     if (this.plugin.destroy) {
       this.plugin.destroy(this.configuration);

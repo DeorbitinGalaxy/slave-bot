@@ -1,19 +1,15 @@
 import { Message } from 'discord.js';
-import { Observable } from 'rxjs/Observable';
 
 import { SlaveBotPlugin, PluginConfiguration, split, getDoubleQuotedText, Md, fromDiscordEvent } from '../../lib';
-
-let subscription: any;
 
 export const plugin: SlaveBotPlugin = {
   name: 'avatar',
   version: '1.0.0',
   description: 'Change the bot avatar. The update is seen on all the servers the bot is connected to',
   usage: '/slaveavatar {game}',
-  register (plugin: PluginConfiguration) {
-    
-    subscription = fromDiscordEvent(plugin.bot, 'message').subscribe((message: Message) => {
-
+  events: {
+    message (plugin: PluginConfiguration, message: Message) {
+      
       if (!plugin.server.isElevated(message)) {
         return;
       }
@@ -27,11 +23,6 @@ export const plugin: SlaveBotPlugin = {
 
         return plugin.bot.user.setAvatar(parts[1] || null);
       }
-    });
-
-    return Promise.resolve();
-  },
-  destroy () {
-    subscription.unsubscribe();
+    }
   }
 }

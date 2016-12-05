@@ -1,6 +1,4 @@
 import { Message } from 'discord.js';
-import { Observable } from 'rxjs/Observable';
-import 'rxjs/add/observable/empty';
 
 import { 
   SlaveBotPlugin, 
@@ -12,17 +10,13 @@ import {
 } from '../../lib';
 
 
-let subscription: any;
-
 export const plugin: SlaveBotPlugin = {
   name: 'game',
   version: '1.0.0',
   description: 'Change the bot playing game. The update is seen on all the servers the bot is connected to',
   usage: '/slavegame {game}',
-  register (plugin: PluginConfiguration) {
-    
-    subscription = fromDiscordEvent(plugin.bot, 'message').subscribe((message: Message) => {
-
+  events: {
+    message (plugin: PluginConfiguration, message: Message) {
       if (!plugin.server.isElevated(message)) {
         return;
       }
@@ -32,11 +26,6 @@ export const plugin: SlaveBotPlugin = {
         const game = getDoubleQuotedText(parts, 1);
         return plugin.bot.user.setGame(game.text || null);
       }
-    });
-
-    return Promise.resolve();
-  },
-  destroy () {
-    subscription.unsubscribe();
+    }
   }
 }

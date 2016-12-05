@@ -10,10 +10,9 @@ export const plugin: SlaveBotPlugin = {
   version: '1.0.0',
   description: 'Reboot the Slave Bot, eleveted permissions required.',
   usage: '/slavereboot',
-  register (plugin: PluginConfiguration) {
-    
-    subscription = fromDiscordEvent(plugin.bot, 'message').subscribe((message: Message) => {
-
+  events: {
+    message (plugin: PluginConfiguration, message: Message) {
+      
       if (!plugin.server.isElevated(message)) {
         return;
       }
@@ -25,11 +24,6 @@ export const plugin: SlaveBotPlugin = {
           return plugin.server.reboot();
         });
       }
-    });
-
-    return Promise.resolve();
-  },
-  destroy () {
-    subscription.unsubscribe();
+    }
   }
 }

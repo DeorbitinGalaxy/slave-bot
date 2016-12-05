@@ -220,15 +220,13 @@ export const plugin: SlaveBotPlugin = {
     /delcmd {command}
     /cmdlist
   `,
-  register (plugin: PluginConfiguration) {
-
-    const { bot, db } = plugin;
-
-    internals.options = assignDefaultsOptions(plugin.options);
-
-    subscription = fromDiscordEvent(bot, 'message').subscribe((message: Message) => {
+  events: {
+    message (plugin: PluginConfiguration, message: Message) {
 
       const parts: string[] = split(message);
+
+      const { bot, db } = plugin;
+      internals.options = assignDefaultsOptions(plugin.options);
 
       switch (parts[0]) {
         case '/addcmd':
@@ -248,21 +246,19 @@ export const plugin: SlaveBotPlugin = {
             loadCommands(db, message.guild.id).then((list: any[]) => handlePossibleCommand(list, message));
           }
       }
-    });
+    }
+  },
+  register (plugin: PluginConfiguration) {
 
     return new Promise((resolve, reject) => {
-      db.ensureIndex({ fieldName: 'guild' }, (err) => {
+      plugin.db.ensureIndex({ fieldName: 'guild' }, (err) => {
         if (err) {
           reject(err);
         }
         else {
-          db.loadDatabase(() => resolve());
+          plugin.db.loadDatabase(() => resolve());
         }
       });
     });
-  },
-
-  destroy (): void {
-    subscription.unsubscribe();
   }
 }
