@@ -1,14 +1,17 @@
 import { Client, Message } from 'discord.js';
+import * as Path from 'path';
+
 import { Observable } from 'rxjs/Observable';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 import { Observer } from 'rxjs/Observer';
 import 'rxjs/add/observable/empty';
+import 'rxjs/add/observable/forkJoin';
+
 import * as Datastore from 'nedb';
 
 import { SlaveBotConfig } from './config';
 import { fromDiscordEvent } from './utils/discord-event';
-import { SlaveBotPlugin } from './plugins/plugin';
-
+import { SlaveBotPlugin } from './plugin';
 
 export interface PluginConfiguration {
   server: SlaveBotServer;
@@ -23,6 +26,8 @@ export interface PluginSummary {
   description?: string;
   usage?: string;
 }
+
+const PLUGIN_DIR: string = '../plugins';
 
 export class PluginContainer {
 
@@ -202,7 +207,7 @@ export class SlaveBotServer {
         }
 
         const local = typeof pluginConfig.path === 'undefined';
-        const path = local ? `./plugins/${pluginConfig.name}` : pluginConfig.path;
+        const path = local ? Path.posix.join(PLUGIN_DIR, pluginConfig.name) : pluginConfig.path;
 
         const { plugin } = require(path);
         this.plugins[plugin.name] = plugin;

@@ -2,11 +2,15 @@ import { Message } from 'discord.js';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/empty';
 
-import { SlaveBotPlugin } from '../plugin';
-import { PluginConfiguration } from '../../server';
-import { split, getDoubleQuotedText } from '../../utils/message-utils';
-import * as Md from '../../utils/markdown';
-import { fromDiscordEvent } from '../../utils/discord-event';
+import { 
+  SlaveBotPlugin, 
+  PluginSummary, 
+  PluginConfiguration, 
+  split, 
+  getDoubleQuotedText, 
+  fromDiscordEvent,
+  Md 
+} from '../../lib';
 
 let subscription: any;
 

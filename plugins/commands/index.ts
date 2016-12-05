@@ -1,14 +1,10 @@
 import { Client, Message } from 'discord.js';
-import { SlaveBotPlugin } from '../plugin';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/bindCallback';
 import { Subscription } from 'rxjs/Subscription';
 import * as Datastore from 'nedb';
 
-import { fromDiscordEvent } from '../../utils/discord-event';
-import { split, getDoubleQuotedText } from '../../utils/message-utils';
-import * as Md from '../../utils/markdown';
-import { PluginConfiguration } from '../../server';
+import { SlaveBotPlugin, fromDiscordEvent, split, getDoubleQuotedText, Md, PluginConfiguration } from '../../lib';
 
 
 const internals: any = {
