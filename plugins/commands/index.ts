@@ -6,7 +6,6 @@ import * as Datastore from 'nedb';
 
 import { SlaveBotPlugin, fromDiscordEvent, split, getDoubleQuotedText, Md, PluginConfiguration } from '../../lib';
 
-
 const internals: any = {
   guilds: {},
   // http://www.fon.hum.uva.nl/praat/manual/Regular_expressions_1__Special_characters.html
@@ -221,7 +220,7 @@ export const plugin: SlaveBotPlugin = {
     /delcmd {command}
     /cmdlist
   `,
-  register (plugin: PluginConfiguration): Observable<any> {
+  register (plugin: PluginConfiguration) {
 
     const { bot, db } = plugin;
 
@@ -251,13 +250,13 @@ export const plugin: SlaveBotPlugin = {
       }
     });
 
-    return Observable.create((observer) => {
+    return new Promise((resolve, reject) => {
       db.ensureIndex({ fieldName: 'guild' }, (err) => {
         if (err) {
-          observer.error(err);
+          reject(err);
         }
         else {
-          db.loadDatabase((() => observer.complete()));
+          db.loadDatabase(() => resolve());
         }
       });
     });

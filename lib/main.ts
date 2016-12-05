@@ -12,26 +12,14 @@ if (args.config && typeof args.config === 'string') {
   slaveJson = resolve(args.config);
 } 
 
-let config;
+const server = new SlaveBotServer();
 
-// TODO slave.json path
-try {
-  config = require(slaveJson);
-}
-catch (ignored) {
-  throw new Error('Could not find slave.json configuration file at: ' + slaveJson);
-}
-
-const server = new SlaveBotServer(config);
+server.setup(slaveJson);
 
 server.ready.subscribe((ready) => {
   if (ready) {
-    console.log('Slave bot started');
+    console.log('Slave Bot started...');
   }
 });
 
-
 server.start();
-
-
-

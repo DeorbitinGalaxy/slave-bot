@@ -1,24 +1,15 @@
 import { Message } from 'discord.js';
 import { Observable } from 'rxjs/Observable';
-import 'rxjs/add/observable/empty';
 
-import { 
-  SlaveBotPlugin, 
-  PluginConfiguration,
-  split,
-  getDoubleQuotedText,
-  Md,
-  fromDiscordEvent
-} from '../../lib';
-
+import { SlaveBotPlugin, PluginConfiguration, split, getDoubleQuotedText, Md, fromDiscordEvent } from '../../lib';
 
 let subscription: any;
 
 export const plugin: SlaveBotPlugin = {
-  name: 'game',
+  name: 'reboot',
   version: '1.0.0',
-  description: 'Change the bot playing game. The update is seen on all the servers the bot is connected to',
-  usage: '/slavegame {game}',
+  description: 'Reboot the Slave Bot, eleveted permissions required.',
+  usage: '/slavereboot',
   register (plugin: PluginConfiguration) {
     
     subscription = fromDiscordEvent(plugin.bot, 'message').subscribe((message: Message) => {
@@ -28,9 +19,11 @@ export const plugin: SlaveBotPlugin = {
       }
 
       const parts: string[] = split(message);
-      if (parts[0] === '/slavegame') {
-        const game = getDoubleQuotedText(parts, 1);
-        return plugin.bot.user.setGame(game.text || null);
+      if (parts[0] === '/slavereboot') {
+
+        message.channel.sendMessage('Rebooting...').then(() => {
+          return plugin.server.reboot();
+        });
       }
     });
 

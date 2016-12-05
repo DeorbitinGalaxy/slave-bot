@@ -84,12 +84,42 @@ export class SlaveBotServer {
 
 
   private started: boolean = false;
-  private registrations: Observable<any>;
+  private registrations: Promise<any>;
 
-  constructor (private config: SlaveBotConfig) {
+  private slaveJson: string;
+  private config: SlaveBotConfig;
+
+  public setup (slaveJson: string) {
+
+    this.slaveJson = slaveJson;
+
+    try {
+      this.config = require(this.slaveJson);
+    }
+    catch (ignored) {
+      throw new Error('Could not find slave.json configuration file at: ' + slaveJson);
+    }
 
     this.bot = new Client();
     this._setup();
+  }
+
+  public reboot () {
+
+    return this.quit().then(() => {
+      
+      this.config = require(this.slaveJson);
+      this.bot = new Client();
+      this._setup();
+      return this.start();
+    })
+    .then(() => {
+      return new Promise((resolve, reject) => {
+        this.bot.once('ready', () => {
+          resolve();
+        });
+      });
+    });
   }
 
 
@@ -139,7 +169,7 @@ export class SlaveBotServer {
     }
   }
 
-  loadPlugin (message: Message, name: string, options: any = null): Observable<any> {
+  loadPlugin (message: Message, name: string, options: any = null): Promise<any> {
 
     if (this.plugins[name] && this.isElevated(message)) {
       if (options === null) {
@@ -149,10 +179,10 @@ export class SlaveBotServer {
       return this.register(name, options);
     }
 
-    return Observable.throw({ code: 404, message: 'Plugin not found' });
+    return Promise.reject({ code: 404, message: 'Plugin not found' });
   }
 
-  private register (name: string, options: any = null): Observable<any> {
+  private register (name: string, options: any = null): Promise<any> {
 
     return this.plugins[name].register({
       server: this,
@@ -202,33 +232,28 @@ export class SlaveBotServer {
     const plugins = this.config.plugins || [];
 
     plugins.forEach(
-      (pluginConfig: any) => {
-        if (!pluginConfig.name) {
-          throw new Error(`Missing plugin name: ${JSON.stringify(pluginConfig)}`);
+      (config: any) => {
+        if (!config.name) {
+          throw new Error(`Missing plugin name: ${JSON.stringify(config)}`);
         }
 
-        const local = typeof pluginConfig.path === 'undefined';
-        const path = local ? Path.posix.join(PLUGIN_DIR, pluginConfig.name) : pluginConfig.path;
+        const local = typeof config.path === 'undefined';
+        const path = local ? Path.posix.join(PLUGIN_DIR, config.name) : config.path;
 
         const { plugin } = require(path);
         this.plugins[plugin.name] = plugin;
-
-        this.options[plugin.name] = pluginConfig.options || null;
+        this.options[plugin.name] = config.options || null;
       }
-    )
+    );
 
-
-    const observables = Object.keys(this.plugins).map((key: string) => {
+    const promises = Object.keys(this.plugins).map((key: string) => {
       return this.register(key, this.options[key]);
     });
 
-    this.registrations = Observable.forkJoin(
-      observables
-    );
-
+    this.registrations = Promise.all(promises);
   }
 
-  public start (): void {
+  public start (): Promise<any> {
 
     if (this.started) {
       return;
@@ -236,25 +261,24 @@ export class SlaveBotServer {
 
     this.started = true;
 
-    this.registrations.subscribe(
-      () => {},
-      (err) => { throw err },
-      () => {
-        this.bot.login(this.config.botToken, null).catch((err) => {
-          if (err) {
-            throw err;
-          }
-
-          this.bot.user.setStatus('online');
-        });
-      }
-    );
+    return this.registrations
+      .then(() => this.bot.login(this.config.botToken, null))
+      .then(() => this.bot.user.setStatus('online'));
   }
 
-  public quit (): void {
+  public quit (): Promise<any> {
+
     if (this.started) {
-      console.log('offline');
-      this.bot.user.setStatus('offline');
+
+      return this.bot.user.setStatus('invisible').then(() => {
+        for (let plugin in this.plugins) {
+          this.plugins[plugin].destroy();
+        }
+
+        return this.bot.destroy().then(() => this.started = false);
+      });
     }
+
+    return Promise.resolve();
   }
 }

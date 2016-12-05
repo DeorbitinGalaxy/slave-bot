@@ -1,12 +1,18 @@
-import { Observable } from 'rxjs/Observable';
 import { PluginConfiguration } from './server';
+import { Message } from 'discord.js';
+
+
+
+export interface SlaveBotEvents {
+  message?: (plugin: PluginConfiguration, message: Message) => void;
+}
 
 export interface SlaveBotPlugin {
   name: string;
   version: string;
-  register: (plugin: PluginConfiguration) => Observable<any>;
+  register: (plugin: PluginConfiguration) => Promise<any>;
   destroy: () => void;
-  dependencies?: string[];
   description?: string;
   usage?: string;
+  events?: SlaveBotEvents;
 }

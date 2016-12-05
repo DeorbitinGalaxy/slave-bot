@@ -36,7 +36,7 @@ export const plugin: SlaveBotPlugin = {
       }
     });
 
-    return Observable.empty();
+    return Promise.resolve();
   },
   destroy () {
     subscription.unsubscribe();

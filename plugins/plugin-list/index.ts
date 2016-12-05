@@ -30,8 +30,7 @@ export const plugin: SlaveBotPlugin = {
             Md.line(description ? description : 'No description available'),
             Md.line(Md.bold('Usage: ', usage ? usage : 'No usage available')),
             Md.line()
-          )
-          // reply = `${reply}\n${Md.bold(plugin.name)} - ${Md.italic('v' + plugin.version)} - ${d ? d : 'No description available'}`;
+          );
         });
 
         return message.reply(reply);
@@ -39,7 +38,7 @@ export const plugin: SlaveBotPlugin = {
 
     });
 
-    return Observable.empty();
+    return Promise.resolve();
   },
   destroy () {
     subscription.unsubscribe();

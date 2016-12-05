@@ -1,6 +1,5 @@
 import { Message } from 'discord.js';
 import { Observable } from 'rxjs/Observable';
-import 'rxjs/add/observable/empty';
 
 import { SlaveBotPlugin, PluginConfiguration, split, Md, fromDiscordEvent } from '../../lib';
 
@@ -37,7 +36,7 @@ export const plugin: SlaveBotPlugin = {
       }
     });
 
-    return Observable.empty();
+    return Promise.resolve();
   },
   destroy () {
     subscription.unsubscribe();
