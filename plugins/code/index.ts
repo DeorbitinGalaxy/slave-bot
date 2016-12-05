@@ -12,7 +12,7 @@ export const plugin: SlaveBotPlugin = {
 
       const parts: string[] = split(message);
 
-      if (parts[0] === '/code' && plugin.server.isElevated(message)) {
+      if (parts[0] === '/code') {
 
         if (!parts[1]) {
           return message.reply('Missing code');
