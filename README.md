@@ -6,16 +6,19 @@ The bot works by loading plugins with a configuration file `slave.json`.
 
 The `slave.json` contains:
 
-```js
-{
-    // Your bot token that you can find by creating a bot in the Discord dashboard
-    botToken: YOUR_BOT_TOKEN,
+- botToken: Your bot token that you can find by creating a bot in the Discord dashboard
+- botUsername: Optional
+- initialPlayingGame: Optional
+- plugins: Array of plugins, optional
+    + path: If path is missing, the plugin is a name from the plugins folder
 
-    botUsername: BOT_USERNAME, // optional
-    initialPlayingGame: PLAYING_GAME, // optional
-    // Array of plugins, optional
-    plugins: [
-        { name: PLUGIN_NAME, path: PLUGIN_PATH, options: {} } // if path is missing, the plugin is a name from the plugins folder
+```json
+{
+    "botToken": "YOUR_BOT_TOKEN",
+    "botUsername": "BOT_USERNAME",
+    "initialPlayingGame": "PLAYING_GAME", 
+    "plugins": [
+        { "name": "PLUGIN_NAME", "path": "PLUGIN_PATH", "options": {} }
     ]
 }
 ```
