@@ -1,6 +1,6 @@
 {
   "name": "slave-bot",
-  "version": "1.0.0",
+  "version": "1.0.4",
   "description": "Self-hosted extensible discord bot",
   "main": "dist/index.js",
   "bin": {
