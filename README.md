@@ -7,10 +7,12 @@ The bot works by loading plugins with a configuration file `slave.json`.
 The `slave.json` contains:
 
 - botToken: Your bot token that you can find by creating a bot in the Discord dashboard
-- botUsername: Optional
-- initialPlayingGame: Optional
+- botUsername: Optional 
+- initialPlayingGame: The initial playing game. If the game plugin is used, the game will be store in a datastore.
 - plugins: Array of plugins, optional
+    + name: The name of the plugin (the name should not conflict)
     + path: If path is missing, the plugin is a name from the plugins folder
+    + options: The plugin options
 
 ```json
 {
@@ -25,13 +27,14 @@ The `slave.json` contains:
 
 A plugin is a module that export:
 
-* a variable called plugin which has:
-    + a name
-    + a version
-    + a register method
-    + a destroy method
-    + an optional description
-    + a optional usage description
+* a variable called `plugin` (very important) which has:
+    + a `name`
+    + a `version`
+    + a `register` method (optional) - Used to do some initialization
+    + a `destroy` method (optional) - Used to do some cleanup
+    + an optional `description`
+    + a optional `usage` description
+    + some optional `events` listeners
 
 It follows this interface:
 ```js
@@ -40,13 +43,22 @@ export interface SlaveBotPlugin {
   version: string;
   description?: string;
   usage?: string;
-  register: (plugin: PluginConfiguration) => Observable<any>;
-  destroy: () => void;
+  register?: (plugin: PluginConfiguration) => Observable<any>;
+  destroy?: (plugin: PluginConfiguration) => void;
+  events?: SlaveBotEvents;
 }
 ```
 
+You can find all the events available here: [SlaveBotEvents](./lib/events.ts)
 
-The plugin configuration objects takes the plugin database (one database per plugin), the server, the bot client and the plugin options.
+
+The plugin configuration object takes:
+
+* the plugin datastore (one datastore per plugin)
+* the server
+* the bot client
+* the plugin options 
+* the plugin state (some state that can be used across functions)
 
 
 ## Try it: (work in progress)
@@ -65,7 +77,7 @@ The permissions can be found in the Discord documentation. Basic permissions for
 
 * `npm install`
 * `npm run tsc:watch`
-* `npm start:watch`
+* `npm run start:watch`
 
 
 

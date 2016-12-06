@@ -4,7 +4,7 @@ import { SlaveBotPlugin, PluginConfiguration, PluginSummary, split, Md, fromDisc
 
 export const plugin: SlaveBotPlugin = {
   name: 'plugin-info',
-  version: '1.0.0',
+  version: require('../../../package.json').version,
   description: 'Display plugin information',
   usage: '/plugininfo {name}',
   events: {

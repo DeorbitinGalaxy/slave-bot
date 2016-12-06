@@ -4,7 +4,7 @@ import { SlaveBotPlugin, PluginConfiguration, split, getDoubleQuotedText, Md, fr
 
 export const plugin: SlaveBotPlugin = {
   name: 'avatar',
-  version: '1.0.0',
+  version: require('../../../package.json').version,
   description: 'Change the bot avatar. The update is seen on all the servers the bot is connected to',
   usage: '/slaveavatar {game}',
   events: {

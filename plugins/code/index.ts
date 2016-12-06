@@ -4,7 +4,7 @@ import { SlaveBotPlugin, PluginConfiguration, split, Md, fromDiscordEvent } from
 
 export const plugin: SlaveBotPlugin = {
   name: 'code',
-  version: '1.0.0',
+  version: require('../../../package.json').version,
   description: 'Paste code using Markdown',
   usage: '/code {snippet}',
   events: {

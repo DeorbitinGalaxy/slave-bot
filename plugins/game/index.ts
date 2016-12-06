@@ -12,14 +12,14 @@ import {
 
 export const plugin: SlaveBotPlugin = {
   name: 'game',
-  version: '1.0.0',
+  version: require('../../../package.json').version,
   description: 'Change the bot playing game. The update is seen on all the servers the bot is connected to',
   usage: '/slavegame {game}',
   register (plugin: PluginConfiguration) {
     return new Promise((resolve, reject) => {
       plugin.db.loadDatabase(() => {
         plugin.db.findOne({ _id: 'current_game' }, (err, doc: any) => {
-          
+
           if (err) {
             reject(err);
           }

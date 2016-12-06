@@ -7,7 +7,7 @@ let subscription: any;
 
 export const plugin: SlaveBotPlugin = {
   name: 'reboot',
-  version: '1.0.0',
+  version: require('../../../package.json').version,
   description: 'Reboot the Slave Bot, eleveted permissions required.',
   usage: '/slavereboot',
   events: {

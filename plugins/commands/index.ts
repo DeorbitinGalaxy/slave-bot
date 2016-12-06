@@ -182,7 +182,7 @@ function assignDefaultsOptions (options: any) {
 
 export const plugin: SlaveBotPlugin = {
   name: 'commands',
-  version: '1.0.0',
+  version: require('../../../package.json').version,
   description: 'Manage custom commands',
   usage: `
     /addcmd {command} {message} [start|match|startonly]

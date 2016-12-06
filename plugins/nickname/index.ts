@@ -12,7 +12,7 @@ import {
 
 export const plugin: SlaveBotPlugin = {
   name: 'nickname',
-  version: '1.0.0',
+  version: require('../../../package.json').version,
   description: 'Change the bot username (only twice per hour)',
   usage: '/slavenick {nickname}',
   events: {

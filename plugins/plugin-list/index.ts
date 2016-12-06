@@ -7,7 +7,7 @@ let subscription: any;
 
 export const plugin: SlaveBotPlugin = {
   name: 'plugin-list',
-  version: '1.0.0',
+  version: require('../../../package.json').version,
   description: 'Display the plugin list',
   usage: '/pluginlist',
   events: {
