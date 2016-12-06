@@ -6,6 +6,14 @@
   "bin": {
     "slave-bot": "./bin/index.js"
   },
+  "files": [
+    "dist",
+    "lib",
+    "manual_typings",
+    "plugins",
+    "bin",
+    "tsconfig.json"
+  ],
   "scripts": {
     "tsc": "node_modules/.bin/tsc -p .",
     "tsc:watch": "npm run tsc -- --watch",
