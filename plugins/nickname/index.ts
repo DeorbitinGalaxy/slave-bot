@@ -1,4 +1,4 @@
-import { Message } from 'discord.js';
+import { Message, GuildMember } from 'discord.js';
 
 import { 
   SlaveBotPlugin, 
@@ -25,8 +25,10 @@ export const plugin: SlaveBotPlugin = {
         if (nick.error) {
           return message.reply('Missing nickname or syntax error');
         }
-        
-        return plugin.bot.user.setUsername(nick.text);
+
+        return message.guild.fetchMember(plugin.bot.user).then((member: GuildMember) => {
+          return member.setNickname(nick.text);
+        });
       }
     }
   }

@@ -166,7 +166,6 @@ function commandList (bot: Client, db: Datastore, message: Message) {
   }
 
   if (internals.guilds[message.guild.id]) {
-    console.log('cached');
     display(internals.guilds[message.guild.id]);
   }
   else {

@@ -3,5 +3,5 @@ export interface SlaveBotConfig {
   initialPlayingGame?: string;
   adminRole?: string;
   botUsername?: string;
-  plugins?: string[];
+  plugins?: { name: string, path?: string, options?: any }[];
 }

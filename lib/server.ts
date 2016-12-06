@@ -1,11 +1,11 @@
 import { Client, Message } from 'discord.js';
-import * as Path from 'path';
+import { homedir } from 'os';
+import { join, posix } from 'path';
+import { existsSync, statSync, mkdirSync, unlinkSync } from 'fs';
+
 
 import { Observable } from 'rxjs/Observable';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
-import { Observer } from 'rxjs/Observer';
-import 'rxjs/add/observable/empty';
-import 'rxjs/add/observable/forkJoin';
 
 import * as Datastore from 'nedb';
 import * as minimist from 'minimist';
@@ -14,6 +14,9 @@ import { SlaveBotConfig } from './config';
 import { fromDiscordEvent } from './utils/discord-event';
 import { SlaveBotPlugin } from './plugin';
 
+/**
+ * A plugin configuration passed to methods in a plugin.
+ */
 export interface PluginConfiguration {
   server: SlaveBotServer;
   bot: Client;
@@ -22,6 +25,9 @@ export interface PluginConfiguration {
   state: any;
 }
 
+/**
+ * A plugin summary used in SlaveBotServer#pluginInfo and SlaveBotServer#pluginList
+ */
 export interface PluginSummary {
   name: string;
   version: string;
@@ -30,7 +36,27 @@ export interface PluginSummary {
 }
 
 const PLUGIN_DIR: string = '../plugins';
+const APP_DATA_DIR: string = join(homedir(), '.slavebot');
+const DATABASES_DIR: string = join(APP_DATA_DIR, 'databases');
 
+function mkdir (path: string) {
+
+  try {
+    const stat = statSync(path);
+    if (stat && !stat.isDirectory) {
+      unlinkSync(path);
+    }
+  }
+  catch (ignored) {
+    mkdirSync(path);
+  }
+}
+
+/**
+ * A wrapper around a plugin.
+ * Handles registration of the plugin
+ * Handles listening to events and unsubscribing on destroy.
+ */
 class PluginContainer {
 
   private configuration: PluginConfiguration;
@@ -44,9 +70,13 @@ class PluginContainer {
     private db: Datastore,
     private options: any = {}
   ) {
+
     this.configuration = { server, bot, db, options, state: {} };
+    mkdir(APP_DATA_DIR);
+    mkdir(DATABASES_DIR);
   }
 
+  // Initialize plugin, listen to events
   register (): Promise<any> {
 
     if (this.plugin.register) {
@@ -57,24 +87,7 @@ class PluginContainer {
     }
   }
 
-  private _listenEvents () {
-    const { events } = this.plugin;
-
-    if (!events) {
-      return;
-    }
-
-    for (let event in events) {
-
-      const handler = (...args: any[]) => {
-        events[event](this.configuration, ...args);
-      };
-
-      this.bot.on(event, handler);
-      this.handlers[event] = handler;
-    }
-  }
-
+  // Remove all handlers, call SlaveBotPlugin#destroy
   destroy (): void {
 
     for (let handler in this.handlers) {
@@ -85,8 +98,32 @@ class PluginContainer {
       this.plugin.destroy(this.configuration);
     }
   }
+
+  // Listen to events declared in SlaveBotPlugin#events
+  private _listenEvents () {
+
+    const { events } = this.plugin;
+
+    // No events are declared
+    if (!events) {
+      return;
+    }
+
+    for (let event in events) {
+
+      // Declare a handler that can be referenced later
+      const handler = (...args: any[]) => {
+        events[event](this.configuration, ...args);
+      };
+
+      this.bot.on(event, handler);
+      this.handlers[event] = handler;
+    }
+  }
 }
 
+
+// The SlaveBotServer handles registrations/unregistrations of plugins 
 export class SlaveBotServer {
 
   private _ready: BehaviorSubject<boolean> = new BehaviorSubject(false);
@@ -101,7 +138,11 @@ export class SlaveBotServer {
   private slaveJson: string;
   private config: SlaveBotConfig;
 
-  public setup (slaveJson: string) {
+  /**
+   * Initialize a SlaveBotServer
+   * @param slaveJson the configuration file path.
+   */
+  setup (slaveJson: string) {
 
     this.slaveJson = slaveJson;
 
@@ -116,25 +157,32 @@ export class SlaveBotServer {
     this._setup();
   }
 
-  public reboot () {
+  /**
+   * Reboot the server:
+   * - The client quits
+   * - All event listeners are destroyed 
+   * - The client joins 
+   * - All event listeners are created
+   * - Start the client
+   */
+  reboot () {
 
     return this.quit().then(() => {
       
+      delete require.cache[require.resolve(this.slaveJson)];
       this.config = require(this.slaveJson);
       this.bot = new Client();
       this._setup();
       return this.start();
-    })
-    .then(() => {
-      return new Promise((resolve, reject) => {
-        this.bot.once('ready', () => {
-          resolve();
-        });
-      });
     });
   }
 
-
+  /**
+   * Returns true if the message is coming from an elevated role.
+   * An elevated role is by default "Slave Master" but can be changed via the configuration file via 
+   * the "adminRole" property.
+   * @param message the message to check.
+   */
   isElevated (message: Message): boolean {
 
     const { roles } = message.guild;
@@ -145,10 +193,15 @@ export class SlaveBotServer {
     return (role && member) ? member.roles.exists('name', role.name) : false;
   }
 
+  /**
+   * Call a method declared by SlaveBotServer#methods
+   * @param name the method name 
+   * @param args the arguments to pass to the method
+   */
   method (name: string, ...args: any[]): any {
 
     if (!this.methods[name]) {
-      throw Error(`SlaveBotServer#method: no method called ${name}`);
+      throw new Error(`SlaveBotServer#method: no method called ${name}`);
     }
 
     const method = this.methods[name];
@@ -156,6 +209,11 @@ export class SlaveBotServer {
     return method.apply(this, args);
   }
 
+  /**
+   * Creates a method.
+   * @param name the method name
+   * @param fn the method
+   */
   methods (name: string, fn: Function) {
     if (typeof fn === 'function') {
       this.methods[name] = fn;
@@ -171,7 +229,10 @@ export class SlaveBotServer {
     return minimist(args);
   }
 
- 
+  /**
+   * Returns a plugin summary of the pluginName 
+   * @param pluginName the plugin name
+   */
   pluginInfo (pluginName: string): PluginSummary {
     
     const container = this.plugins[pluginName];
@@ -185,6 +246,10 @@ export class SlaveBotServer {
     };
   }
 
+  /**
+   * Returns a list of plugin summaries that are registered.
+   * @returns PluginSummary[]
+   */
   pluginList (): PluginSummary[] {
 
     return Object.keys(this.plugins).map((key: string) => {
@@ -193,6 +258,45 @@ export class SlaveBotServer {
         name, version, description, usage
       };
     });
+  }
+
+  /**
+   * Starts the server 
+   * @return a promise that resolves when the server has started.
+   */
+  start (): Promise<any> {
+
+    if (this.started) {
+      return;
+    }
+
+    this.started = true;
+
+    return this.registrations
+      .then(() => this.bot.login(this.config.botToken, null))
+      .then(() => this.bot.user.setStatus('online'));
+  }
+
+  /**
+   * Quit Discord.
+   * The client quit discord and destroys all event listeners.
+   */
+  quit (): Promise<any> {
+
+    if (this.started) {
+
+      return this.bot.user.setStatus('invisible').then(() => {
+        for (let plugin in this.plugins) {
+          if (this.plugins[plugin].destroy) {
+            this.plugins[plugin].destroy();
+          }
+        }
+
+        return this.bot.destroy().then(() => this.started = false);
+      });
+    }
+
+    return Promise.resolve();
   }
 
   private _setup () {
@@ -211,61 +315,27 @@ export class SlaveBotServer {
 
     const plugins = this.config.plugins || [];
 
-    plugins.forEach(
-      (config: any) => {
-        if (!config.name) {
-          throw new Error(`Missing plugin name: ${JSON.stringify(config)}`);
-        }
-
-        const local = typeof config.path === 'undefined';
-        const path = local ? Path.posix.join(PLUGIN_DIR, config.name) : config.path;
-
-        const { plugin } = require(path);
-        this.plugins[plugin.name] = new PluginContainer(
-          this, 
-          this.bot, 
-          plugin, 
-          new Datastore(`./databases/${plugin.name}.db`),
-          config.options || null
-        );
+    for (const config of plugins) {
+      if (!config.name) {
+        throw new Error(`Missing plugin name: ${JSON.stringify(config)}`);
       }
-    );
 
-    const promises = Object.keys(this.plugins).map((key: string) => {
-      return this.plugins[key].register();
-    });
+      const local = typeof config.path === 'undefined';
+      const path = local ? posix.join(PLUGIN_DIR, config.name) : config.path;
+
+      const { plugin } = require(path);
+      this.plugins[plugin.name] = new PluginContainer(
+        this, 
+        this.bot, 
+        plugin, 
+        new Datastore(join(DATABASES_DIR, `${plugin.name}.db`)),
+        config.options || null
+      );
+    }
+
+    const promises = Object.keys(this.plugins)
+        .map((key: string) => this.plugins[key].register());
 
     this.registrations = Promise.all(promises);
-  }
-
-  public start (): Promise<any> {
-
-    if (this.started) {
-      return;
-    }
-
-    this.started = true;
-
-    return this.registrations
-      .then(() => this.bot.login(this.config.botToken, null))
-      .then(() => this.bot.user.setStatus('online'));
-  }
-
-  public quit (): Promise<any> {
-
-    if (this.started) {
-
-      return this.bot.user.setStatus('invisible').then(() => {
-        for (let plugin in this.plugins) {
-          if (this.plugins[plugin].destroy) {
-            this.plugins[plugin].destroy();
-          }
-        }
-
-        return this.bot.destroy().then(() => this.started = false);
-      });
-    }
-
-    return Promise.resolve();
   }
 }

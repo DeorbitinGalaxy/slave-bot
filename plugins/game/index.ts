@@ -17,10 +17,10 @@ export const plugin: SlaveBotPlugin = {
   usage: '/slavegame {game}',
   events: {
     message (plugin: PluginConfiguration, message: Message) {
+
       if (!plugin.server.isElevated(message)) {
         return;
       }
-
       const parts: string[] = split(message);
       if (parts[0] === '/slavegame') {
         const game = getDoubleQuotedText(parts, 1);
