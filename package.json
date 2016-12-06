@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Self-hosted extensible discord bot",
   "main": "dist/index.js",
+  "bin": {
+    "slave-bot": "./bin/index.js"
+  },
   "scripts": {
     "tsc": "node_modules/.bin/tsc -p .",
     "tsc:watch": "npm run tsc -- --watch",
