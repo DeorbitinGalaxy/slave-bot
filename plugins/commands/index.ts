@@ -175,7 +175,8 @@ function commandList (bot: Client, db: Datastore, message: Message) {
 
 function sendBackup (bot: Client, db: Datastore, message: Message) {
    loadCommands(db, message.guild.id).then((list) => {
-     message.channel.sendFile(JSON.stringify(list, null, 4));
+     const buffer = new Buffer(JSON.stringify(list, null, 4), 'utf-8');
+     message.channel.sendFile(buffer, `cmd-backup-${message.guild.name}-${new Date()}`);
    });
 }
 
