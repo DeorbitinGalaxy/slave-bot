@@ -219,6 +219,7 @@ export const plugin: SlaveBotPlugin = {
           break;
         case '/cmdbackup':
           sendBackup(bot, db, message);
+          break;
         default:
           if (internals.guilds[message.guild.id]) {
             handlePossibleCommand(internals.guilds[message.guild.id], message);
