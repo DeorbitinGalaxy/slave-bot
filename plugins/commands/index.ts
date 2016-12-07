@@ -173,6 +173,12 @@ function commandList (bot: Client, db: Datastore, message: Message) {
   }
 }
 
+function sendBackup (bot: Client, db: Datastore, message: Message) {
+   loadCommands(db, message.guild.id).then((list) => {
+     message.channel.sendFile(JSON.stringify(list, null, 4));
+   });
+}
+
 let subscription: Subscription;
 
 function assignDefaultsOptions (options: any) {
@@ -211,6 +217,8 @@ export const plugin: SlaveBotPlugin = {
         case '/cmdlist':
           commandList(bot, db, message);
           break;
+        case '/cmdbackup':
+          sendBackup(bot, db, message);
         default:
           if (internals.guilds[message.guild.id]) {
             handlePossibleCommand(internals.guilds[message.guild.id], message);
