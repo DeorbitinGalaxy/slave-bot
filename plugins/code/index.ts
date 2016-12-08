@@ -23,6 +23,9 @@ export const plugin: SlaveBotPlugin = {
 
         return message.delete().then(() => {
           return message.channel.sendCode(args.l, args._.join(' '));
+        })
+        .catch(() => {
+          return message.reply(`But Master, I can't delete messages :(`);
         });
       }
     }
