@@ -1,4 +1,4 @@
-import { Message } from 'discord.js';
+import { Message, Emoji } from 'discord.js';
 
 import { SlaveBotPlugin, PluginConfiguration, split, Md, fromDiscordEvent } from '../../lib';
 
@@ -25,7 +25,7 @@ export const plugin: SlaveBotPlugin = {
           return message.channel.sendCode(args.l, args._.join(' '));
         })
         .catch(() => {
-          return message.reply(`But Master, I can't delete messages :(`);
+          return message.channel.sendMessage(`But Master ${message.author.toString()}, I can't delete messages :persevere:`);
         });
       }
     }
