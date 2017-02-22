@@ -272,6 +272,8 @@ export class SlaveBotServer {
 
     this.started = true;
 
+    
+
     return this.registrations
       .then(() => this.bot.login(this.config.botToken, null))
       .then(() => this.bot.user.setStatus('online'));
@@ -311,6 +313,10 @@ export class SlaveBotServer {
       }
 
       this._ready.next(true);
+    });
+
+    fromDiscordEvent(this.bot, 'disconnect').subscribe(() => {
+      this.start();
     });
 
     const plugins = this.config.plugins || [];
