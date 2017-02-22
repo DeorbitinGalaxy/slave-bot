@@ -5,6 +5,7 @@ import { existsSync, statSync, mkdirSync, unlinkSync } from 'fs';
 
 
 import { Observable } from 'rxjs/Observable';
+import { Subscription } from 'rxjs/Subscription';
 import { BehaviorSubject } from 'rxjs/BehaviorSubject';
 
 import * as Datastore from 'nedb';
@@ -134,6 +135,7 @@ export class SlaveBotServer {
 
   private started: boolean = false;
   private registrations: Promise<any>;
+  private subscriptions: Subscription[] = [];
 
   private slaveJson: string;
   private config: SlaveBotConfig;
@@ -287,6 +289,12 @@ export class SlaveBotServer {
 
     if (this.started) {
 
+      this.subscriptions.forEach((s) => {
+        s.unsubscribe();
+      });
+
+      this.subscriptions = [];
+
       return this.bot.user.setStatus('invisible').then(() => {
         for (let plugin in this.plugins) {
           if (this.plugins[plugin].destroy) {
@@ -303,21 +311,23 @@ export class SlaveBotServer {
 
   private _setup () {
 
-    fromDiscordEvent(this.bot, 'ready').subscribe(() => {
-      if (this.config.initialPlayingGame) {
-        this.bot.user.setGame(this.config.initialPlayingGame);
-      }
+    this.subscriptions.push(
+      fromDiscordEvent(this.bot, 'ready').subscribe(() => {
+        if (this.config.initialPlayingGame) {
+          this.bot.user.setGame(this.config.initialPlayingGame);
+        }
 
-      if (this.config.botUsername) {
-        this.bot.user.setUsername(this.config.botUsername);
-      }
+        if (this.config.botUsername) {
+          this.bot.user.setUsername(this.config.botUsername);
+        }
 
-      this._ready.next(true);
-    });
+        this._ready.next(true);
+      }),
 
-    fromDiscordEvent(this.bot, 'disconnect').subscribe(() => {
-      this.start();
-    });
+      fromDiscordEvent(this.bot, 'disconnect').subscribe(() => {
+        this.start();
+      })
+    );
 
     const plugins = this.config.plugins || [];
 
