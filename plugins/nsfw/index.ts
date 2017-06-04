@@ -21,7 +21,7 @@ export const plugin: SlaveBotPlugin = {
         const url = parts.slice(1, parts.length);
 
         return message.delete().then(() => {
-          return message.channel.sendMessage(`[NSFW] From ${message.author.toString} : <${url}>`)
+          return message.channel.sendMessage(`[NSFW] From ${message.author.toString()} : <${url}>`)
         })
         .catch(() => {
           return message.channel.sendMessage(`But Master ${message.author.toString()}, I can't delete messages :persevere:`);
