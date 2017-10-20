@@ -14,7 +14,9 @@ if (args.config && typeof args.config === 'string') {
 
 const server = new SlaveBotServer();
 
-server.setup(slaveJson);
+server.setup(slaveJson).then(() => {
+    server.start();
+});
 
 server.ready.subscribe((ready) => {
   if (ready) {
@@ -22,4 +24,3 @@ server.ready.subscribe((ready) => {
   }
 });
 
-server.start();

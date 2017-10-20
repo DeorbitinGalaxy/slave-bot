@@ -9,18 +9,17 @@
   "files": [
     "dist",
     "lib",
-    "manual_typings",
     "plugins",
     "bin",
     "tsconfig.json"
   ],
   "scripts": {
-    "tsc": "node_modules/.bin/tsc -p .",
-    "tsc:watch": "npm run tsc -- --watch",
+    "build": "node_modules/.bin/tsc -p .",
+    "build:watch": "npm run build -- --watch",
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node bin/index.js",
     "start:watch": "node_modules/.bin/nodemon --watch dist bin/index.js",
-    "prepublish": "npm run tsc"
+    "prepare": "npm run build"
   },
   "repository": {
     "type": "git",
@@ -30,7 +29,6 @@
     "Discord",
     "bot",
     "extensible",
-    "slave",
     "self",
     "hosted"
   ],
@@ -41,18 +39,18 @@
   },
   "homepage": "https://github.com/fknop/slave-bot#readme",
   "devDependencies": {
-    "@types/core-js": "^0.9.35",
     "@types/minimist": "^1.1.29",
-    "@types/nedb": "0.0.31",
-    "@types/node": "0.0.2",
-    "nodemon": "^1.10.2",
-    "typescript": "^2.0.10"
+    "@types/nedb": "1.8.4",
+    "@types/node": "8.0.46",
+    "nodemon": "^1.12.1",
+    "typescript": "^2.5.3"
   },
   "dependencies": {
-    "discord.js": "^10.0.1",
-    "lodash": "^4.15.0",
+    "discord.js": "^11.2.0",
+    "erlpack": "github:discordapp/erlpack",
     "minimist": "^1.2.0",
     "nedb": "^1.8.0",
-    "rxjs": "^5.0.0-rc.4"
+    "rxjs": "^5.5.0",
+    "uws": "^8.14.1"
   }
 }

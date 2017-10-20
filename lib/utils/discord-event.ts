@@ -1,9 +1,8 @@
-import { Observable } from 'rxjs/Observable';
-import 'rxjs/add/observable/fromEventPattern';
+import { FromEventPatternObservable } from 'rxjs/observable/FromEventPatternObservable';
 
 export function fromDiscordEvent (source: any, event: string) {
 
-  return Observable.fromEventPattern(
+  return FromEventPatternObservable.create(
     (handler) => source.on(event, handler),
     (handler) => source.removeListener(event, handler)
   );

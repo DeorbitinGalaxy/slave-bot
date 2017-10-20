@@ -10,7 +10,7 @@ import {
   Role
 } from 'discord.js';
 
-import { PluginConfiguration } from './server';
+import { PluginConfiguration } from './plugin';
 
 export interface SlaveBotEvents {
   // Channels

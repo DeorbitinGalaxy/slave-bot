@@ -2,9 +2,8 @@
   "compilerOptions": {
     "module": "commonjs",
     "outDir": "dist",
-    "typeRoots": [
-      "node_modules/@types",
-      "manual_typings"
+    "lib": [
+      "es2016"
     ]
   },
   "exclude": [

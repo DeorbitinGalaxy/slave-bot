@@ -1,6 +1,7 @@
-export { SlaveBotPlugin } from './plugin';
+export { SlaveBotPlugin, PluginConfiguration, PluginSummary } from './plugin';
 export { SlaveBotConfig } from './config';
-export { SlaveBotServer, PluginSummary, PluginConfiguration } from './server';
+export { SlaveBotServer } from './server';
+export { SlaveBotEvents } from './events';
 
 import * as Md from './utils/markdown';
 export { Md };
