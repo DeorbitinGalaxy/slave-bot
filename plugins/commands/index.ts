@@ -59,10 +59,10 @@ class CommandsPluginEvents implements SlaveBotEvents {
     
     switch (parts[0]) {
       case '/addcmd':
-        this.registerCommand(bot, db, message, parts);
+        this.registerCommand(plugin, bot, db, message, parts);
         break;
       case '/delcmd':
-        this.deleteCommand(bot, db, message);
+        this.deleteCommand(plugin, bot, db, message);
         break;
       case '/cmdlist':
         this.commandList(bot, db, message);
@@ -81,7 +81,12 @@ class CommandsPluginEvents implements SlaveBotEvents {
     }
   }
 
-  private registerCommand (bot: Client, db: Datastore, message: Message, parts: string[]) {
+  private registerCommand (plugin: PluginConfiguration, bot: Client, db: Datastore, message: Message, parts: string[]) {
+
+    if (!plugin.server.isElevated(message)) {
+      return;
+    }
+
     const command: string = parts[1];
   
     if (!command) {
@@ -137,8 +142,12 @@ class CommandsPluginEvents implements SlaveBotEvents {
   
   }
   
-  private deleteCommand (bot: Client, db: Datastore, message: Message) {
+  private deleteCommand (plugin: PluginConfiguration, bot: Client, db: Datastore, message: Message) {
   
+    if (!plugin.server.isElevated(message)) {
+      return;
+    }
+
     const parts: string[] = split(message);
     const command = parts[1];
   
