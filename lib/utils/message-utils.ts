@@ -4,6 +4,19 @@ export function split (message: Message, separator: string = ' '): string[] {
   return message.content.trim().split(separator);
 }
 
+export function parseIntArg(parts: string[], index: number, defaultValue: number) {
+  if (index >= parts.length) {
+    return defaultValue;
+  }
+
+  const parsed = parseInt(parts[index]);
+  if (isNaN(parsed)) {
+    return defaultValue;
+  }
+
+  return parsed;
+}
+
 
 export interface DoubleQuotedText {
   text?: string;
